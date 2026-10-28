@@ -17,8 +17,26 @@ public static class Lighting
 {
     public static readonly Vector3 ViewVector = new(0, 0, 1);
 
+    /// <param name="n">Unit surface normal.</param>
     public static Vector3 Shade(Vector3 n, Vector3 point, Vector3 lightPosition, Vector3 objectColor,
-                                LightingParameters p) => throw new NotImplementedException();
+                                LightingParameters p)
+    {
+        Vector3 l = Vector3.Normalize(lightPosition - point);
+        float nDotL = Vector3.Dot(n, l);
+        float cosNL = MathF.Max(0f, nDotL);
 
-    public static int ToArgb(Vector3 rgb01) => throw new NotImplementedException();
+        Vector3 r = Vector3.Normalize(2f * nDotL * n - l);
+        float cosVR = MathF.Max(0f, Vector3.Dot(ViewVector, r));
+        float specular = cosVR == 0f ? 0f : MathF.Pow(cosVR, p.M);
+
+        return p.LightColor * objectColor * (p.Kd * cosNL + p.Ks * specular);
+    }
+
+    public static int ToArgb(Vector3 rgb01)
+    {
+        int r = ToByte(rgb01.X), g = ToByte(rgb01.Y), b = ToByte(rgb01.Z);
+        return unchecked((int)0xFF000000) | (r << 16) | (g << 8) | b;
+    }
+
+    private static int ToByte(float c) => (int)MathF.Min(255f, MathF.Max(0f, MathF.Round(c * 255f)));
 }

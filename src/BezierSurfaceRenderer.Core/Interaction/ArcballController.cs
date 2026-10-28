@@ -17,12 +17,40 @@ namespace BezierSurfaceRenderer.Core.Interaction;
 /// </summary>
 public sealed class ArcballController
 {
-    public float Radius { get; set; }
+    private const float Epsilon = 1e-7f;
 
-    public Mat3 TrackballIncrement(Vector2 previous, Vector2 current) => throw new NotImplementedException();
+    public float Radius { get; set; } = 1f;
 
-    public Mat3 RollIncrement(Vector2 previous, Vector2 current) => throw new NotImplementedException();
+    public Mat3 TrackballIncrement(Vector2 previous, Vector2 current)
+    {
+        Vector3 s0 = ProjectToSphere(previous), s1 = ProjectToSphere(current);
+        Vector3 axis = Vector3.Cross(s0, s1);
+        float length = axis.Length();
+        if (length < Epsilon) return Mat3.Identity;
+
+        float angle = MathF.Acos(Math.Clamp(Vector3.Dot(s0, s1), -1f, 1f));
+        return Mat3.FromAxisAngle(axis / length, angle);
+    }
+
+    public Mat3 RollIncrement(Vector2 previous, Vector2 current)
+    {
+        if (previous.LengthSquared() < Epsilon || current.LengthSquared() < Epsilon) return Mat3.Identity;
+
+        // Signed angle from previous to current around the centre (counter-clockwise positive, y up).
+        float cross = previous.X * current.Y - previous.Y * current.X;
+        float angle = MathF.Atan2(cross, Vector2.Dot(previous, current));
+        return Mat3.RotationZ(angle);
+    }
 
     /// <summary>Exposed for tests and for the documentation's worked example.</summary>
-    public Vector3 ProjectToSphere(Vector2 point) => throw new NotImplementedException();
+    public Vector3 ProjectToSphere(Vector2 point)
+    {
+        Vector2 q = point / Radius;
+        float d2 = q.LengthSquared();
+        if (d2 <= 1f) return new Vector3(q.X, q.Y, MathF.Sqrt(1f - d2));
+
+        // Outside the ball: nearest point on its silhouette (z = 0) → rotation about the view axis.
+        q /= MathF.Sqrt(d2);
+        return new Vector3(q.X, q.Y, 0f);
+    }
 }

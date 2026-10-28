@@ -19,10 +19,26 @@ public sealed class LightAnimator
     /// <summary>Curve parameter t ∈ [0,1).</summary>
     public float Phase { get; private set; }
 
-    public LightAnimator(ClosedBezierCurve path, float z) => throw new NotImplementedException();
+    public LightAnimator(ClosedBezierCurve path, float z)
+    {
+        Path = path;
+        Z = z;
+    }
 
     /// <summary>Advances Phase by Speed·dt when running (dt-based, so speed is frame-rate independent).</summary>
-    public void Advance(TimeSpan dt) => throw new NotImplementedException();
+    public void Advance(TimeSpan dt)
+    {
+        if (!IsRunning) return;
+        float next = Phase + Speed * (float)dt.TotalSeconds;
+        Phase = next - MathF.Floor(next);
+    }
 
-    public Vector3 Position => throw new NotImplementedException();
+    public Vector3 Position
+    {
+        get
+        {
+            Vector2 xy = Path.Evaluate(Phase);
+            return new Vector3(xy.X, xy.Y, Z);
+        }
+    }
 }

@@ -20,13 +20,58 @@ public sealed class BezierSurface
 
     public Vector3[,] ControlPoints { get; }
 
-    public BezierSurface(Vector3[,] controlPoints) => throw new NotImplementedException();
+    public BezierSurface(Vector3[,] controlPoints)
+    {
+        if (controlPoints.GetLength(0) != Degree + 1 || controlPoints.GetLength(1) != Degree + 1)
+            throw new ArgumentException("A bicubic surface needs a 4×4 control net.", nameof(controlPoints));
+        ControlPoints = (Vector3[,])controlPoints.Clone();
+    }
 
-    public SurfaceSample Evaluate(float u, float v) => throw new NotImplementedException();
+    public SurfaceSample Evaluate(float u, float v)
+    {
+        Span<float> bu3 = stackalloc float[4], bv3 = stackalloc float[4];
+        Span<float> bu2 = stackalloc float[3], bv2 = stackalloc float[3];
+        for (int k = 0; k <= 3; k++) { bu3[k] = Bernstein.B(k, 3, u); bv3[k] = Bernstein.B(k, 3, v); }
+        for (int k = 0; k <= 2; k++) { bu2[k] = Bernstein.B(k, 2, u); bv2[k] = Bernstein.B(k, 2, v); }
+
+        var V = ControlPoints;
+        Vector3 p = Vector3.Zero, pu = Vector3.Zero, pv = Vector3.Zero;
+        for (int i = 0; i <= 3; i++)
+        for (int j = 0; j <= 3; j++)
+        {
+            p += V[i, j] * (bu3[i] * bv3[j]);
+            if (i < 3) pu += (V[i + 1, j] - V[i, j]) * (bu2[i] * bv3[j]);
+            if (j < 3) pv += (V[i, j + 1] - V[i, j]) * (bu3[i] * bv2[j]);
+        }
+        pu *= Degree;
+        pv *= Degree;
+
+        return new SurfaceSample(p, pu, pv, SafeNormal(pu, pv));
+    }
+
+    /// <summary>
+    /// Pu × Pv normalised. At a degenerate point (e.g. collinear boundary control points) the cross
+    /// product vanishes; fall back to +z, the "up" direction of a surface that is a function over xy.
+    /// </summary>
+    private static Vector3 SafeNormal(Vector3 pu, Vector3 pv)
+    {
+        Vector3 n = Vector3.Cross(pu, pv);
+        float len = n.Length();
+        return len > 1e-8f ? n / len : Vector3.UnitZ;
+    }
 }
 
 public static class Bernstein
 {
+    private static readonly int[][] Binomial = [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1]];
+
     /// <summary>B_i,n(t) = C(n,i) t^i (1−t)^(n−i), for n ≤ 3.</summary>
-    public static float B(int i, int n, float t) => throw new NotImplementedException();
+    public static float B(int i, int n, float t)
+    {
+        if ((uint)n > 3) throw new ArgumentOutOfRangeException(nameof(n));
+        if (i < 0 || i > n) return 0f;
+        return Binomial[n][i] * Pow(t, i) * Pow(1 - t, n - i);
+    }
+
+    private static float Pow(float x, int e) => e switch { 0 => 1f, 1 => x, 2 => x * x, _ => x * x * x };
 }
