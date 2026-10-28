@@ -1,111 +1,111 @@
 # Bézier Surface Renderer
 
-Renders bicubic Bézier surfaces read from a text file as triangle meshes, filled by a software rasteriser with per-pixel lighting, a Z-buffer, textures and normal maps. Press **F1** or **Esc** to close this window.
+Program wyświetla powierzchnie Béziera trzeciego stopnia wczytane z pliku tekstowego jako siatki trójkątów, wypełniane programowo z oświetleniem wyznaczanym dla każdego piksela, buforem głębokości (Z-buffer), teksturą i mapą wektorów normalnych. Klawisz **F1** lub **Esc** zamyka to okno.
 
-## 1. Quick start
+## 1. Szybki start
 
-- The surfaces are loaded at start-up from `Assets/surfaces.txt` (next to the program). Another file can be given as the first command-line argument: `BezierSurfaceRenderer.exe my_surfaces.txt`.
-- **Drag with the left mouse button** in the drawing area to rotate the scene.
-- Use the panel on the right to change triangulation, the visible elements, the material, the object colour, the normal map and the light.
+- Powierzchnie są wczytywane podczas uruchamiania programu z pliku `Assets/surfaces.txt` (obok pliku programu). Inny plik można podać jako pierwszy argument wiersza poleceń: `BezierSurfaceRenderer.exe moje_powierzchnie.txt`.
+- **Przeciąganie lewym przyciskiem myszy** w obszarze rysowania obraca scenę.
+- Panel po prawej stronie służy do zmiany dokładności triangulacji, rysowanych elementów, materiału, koloru obiektu, mapy wektorów normalnych i światła.
 
-## 2. Mouse controls
+## 2. Sterowanie myszą
 
-| Action | Effect |
+| Akcja | Efekt |
 |---|---|
-| Left drag | Free rotation (virtual trackball) — the point under the cursor follows the cursor |
-| Left drag near/outside the edge | Rotation about the viewing axis (roll) |
-| Shift + left drag, or right drag | Pure roll about the viewing axis |
-| Left drag on a light-path point | Moves that control point (only in "Edit light path" mode) |
-| Mouse wheel on a slider | Changes the slider by one step |
+| Przeciąganie lewym przyciskiem | Swobodny obrót (wirtualna kula, trackball) — punkt pod kursorem podąża za kursorem |
+| Przeciąganie przy krawędzi / poza kulą | Obrót wokół osi patrzenia (oś z) |
+| Shift + lewy przycisk lub prawy przycisk | Wyłącznie obrót wokół osi patrzenia |
+| Przeciąganie punktu krzywej światła | Przesuwa punkt kontrolny (tylko w trybie „Edit light path”) |
+| Kółko myszy nad suwakiem | Zmienia wartość suwaka o jeden krok |
 
-There is no limit on rotation angles; the scene can be turned any number of times in any direction.
+Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dowolnie wiele razy w dowolnym kierunku.
 
-## 3. Keyboard shortcuts
+## 3. Skróty klawiaturowe
 
-| Key | Action |
+| Klawisz | Działanie |
 |---|---|
-| F1 | Open this documentation |
-| Space | Start / stop the light animation |
-| E | Toggle "Edit light path" mode (mouse rotation is disabled while editing) |
-| R | Reset the orientation |
-| 1 | Show / hide the Bézier control net (polygon) |
-| 2 | Show / hide the triangle mesh |
-| 3 | Show / hide the filled triangles |
-| T | Switch object colour: solid colour / texture |
-| N | Normal map on / off |
-| [ and ] | Decrease / increase triangulation density |
-| Ctrl+T | Load a texture |
-| Ctrl+N | Load a normal map |
-| Ctrl+L | Choose the light colour IL |
-| Ctrl+K | Choose the solid object colour IO |
-| Arrows, PgUp/PgDn, Home/End | Adjust the focused slider |
+| F1 | Otwiera dokumentację |
+| Spacja | Uruchamia / zatrzymuje animację światła |
+| E | Włącza / wyłącza tryb edycji krzywej światła (obrót myszą jest wtedy wyłączony) |
+| R | Przywraca początkową orientację sceny |
+| 1 | Pokazuje / ukrywa wieloboki Béziera (siatki kontrolne) |
+| 2 | Pokazuje / ukrywa siatkę trójkątów |
+| 3 | Pokazuje / ukrywa wypełnione trójkąty |
+| T | Przełącza kolor obiektu: jednolity kolor / tekstura |
+| N | Włącza / wyłącza mapę wektorów normalnych |
+| [ oraz ] | Zmniejsza / zwiększa dokładność triangulacji |
+| Ctrl+T | Wczytuje teksturę |
+| Ctrl+N | Wczytuje mapę wektorów normalnych |
+| Ctrl+L | Wybór koloru światła IL |
+| Ctrl+K | Wybór jednolitego koloru obiektu IO |
+| Strzałki, PgUp/PgDn, Home/End | Zmiana wartości aktywnego suwaka |
 
-## 4. Control panel
+## 4. Panel sterowania
 
-### Geometry
-- **Triangulation** — number of cells per side of the (u, v) grid, 1–64. Each cell is split into two triangles, so one surface has 2·n² triangles.
-- **Bézier control net** — the 4×4 control polygon of every surface (amber).
-- **Triangle mesh** — triangle edges (cyan).
-- **Filled triangles** — the shaded, Z-buffered surface.
+### Geometry (geometria)
+- **Triangulation** — liczba komórek siatki (u, v) na bok, od 1 do 64. Każda komórka jest dzielona na dwa trójkąty, więc jedna powierzchnia ma 2·n² trójkątów.
+- **Bézier control net** — wielobok Béziera (siatka 4×4 punktów kontrolnych) każdej powierzchni (kolor bursztynowy).
+- **Triangle mesh** — krawędzie trójkątów (kolor cyjanowy).
+- **Filled triangles** — wypełnione, oświetlone trójkąty z buforem głębokości.
 
-### Material
-- **kd**, **ks** (0–1) and **m** (1–100) — coefficients of the lighting model, equal for all triangles.
-- **Object color IO** — either a **solid colour** (swatch or Colors menu) or a **texture**. The texture is stretched over the parameter domain: texel (u·width, v·height) colours the point P(u, v). A default texture is loaded at start-up; another one can be loaded with "Load…".
+### Material (materiał)
+- **kd**, **ks** (0–1) oraz **m** (1–100) — współczynniki modelu oświetlenia, jednakowe dla wszystkich trójkątów.
+- **Object color IO** — **jednolity kolor** (próbka koloru lub menu Colors) albo **tekstura**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie; inną można wczytać przyciskiem „Load…”.
 
-### Surface detail
-- **Normal map** — perturbs the normal using the loaded normal map (default: bricks; a sphere map is also in `Assets/normalmaps`).
+### Surface detail (szczegóły powierzchni)
+- **Normal map** — modyfikacja wektora normalnego na podstawie wczytanej mapy wektorów normalnych (domyślnie: cegły; w katalogu `Assets/normalmaps` jest też mapa ze sferą).
 
-### Light
-- **Light z** — height of the plane in which the light moves.
-- **Light color IL** — default white.
-- **Animate light** — the light travels around a closed Bézier curve; uncheck (or press Space) to stop it.
-- **Edit light path** — shows the curve's control points: squares lie on the curve, circles are tangent handles. Dragging a square moves it together with its handles; dragging a handle mirrors the opposite handle, so the curve stays smooth (C1). The bright dot is the current light position.
+### Light (światło)
+- **Light z** — współrzędna z płaszczyzny, w której porusza się światło.
+- **Light color IL** — kolor światła, domyślnie biały.
+- **Animate light** — światło porusza się po zamkniętej krzywej Béziera; odznaczenie pola (lub Spacja) zatrzymuje animację.
+- **Edit light path** — pokazuje punkty kontrolne krzywej: kwadraty leżą na krzywej, kółka to uchwyty styczne. Przeciągnięcie kwadratu przesuwa go razem z uchwytami; przeciągnięcie uchwytu symetrycznie przesuwa przeciwległy uchwyt, dzięki czemu krzywa pozostaje gładka (ciągłość C1). Jasny punkt to aktualne położenie źródła światła.
 
-The HUD in the top-left corner shows the frame time, triangle count, light position and animation state. The gizmo in the bottom-left corner shows the current directions of the x (red), y (green) and z (blue) axes.
+W lewym górnym rogu obszaru rysowania wyświetlane są: czas generowania klatki, liczba trójkątów, położenie światła i stan animacji. Wskaźnik w lewym dolnym rogu pokazuje aktualne kierunki osi x (czerwona), y (zielona) i z (niebieska).
 
-## 5. Input file format
+## 5. Format pliku wejściowego
 
-Each surface is 16 consecutive lines `x y z` (real numbers, `.` as the decimal separator), in the order V00, V01, V02, V03, V10, … V33: line k holds V(i, j) with i = k / 4 (paired with parameter u) and j = k mod 4 (paired with v). Surfaces follow each other in groups of 16 lines; at least two are required. Blank lines are ignored. The shipped file contains a dome and a wavy saddle; both are functions over the xy plane and their control points span the cube [−1, 1]³ centred at (0, 0, 0).
+Każda powierzchnia to 16 kolejnych wierszy `x y z` (liczby rzeczywiste, kropka jako separator dziesiętny) w kolejności V00, V01, V02, V03, V10, …, V33: wiersz k zawiera punkt V(i, j), gdzie i = k / 4 (odpowiada parametrowi u), a j = k mod 4 (odpowiada parametrowi v). Kolejne powierzchnie występują po sobie w grupach po 16 wierszy; wymagane są co najmniej dwie. Puste wiersze są pomijane. Dołączony plik zawiera „kopułę” i falujące „siodło”; obie powierzchnie są funkcjami względem płaszczyzny xy, a ich punkty kontrolne wypełniają sześcian [−1, 1]³ o środku w punkcie (0, 0, 0).
 
-## 6. How mouse movement becomes a rotation (technical description)
+## 6. Przekształcenie ruchu myszy na obrót obiektu (opis techniczny)
 
-### 6.1 Orientation is accumulated incrementally
-The scene keeps one 3×3 orientation matrix R (column-vector convention, P' = R·P), starting from the identity. Every mouse-move event during a drag produces a small rotation R_inc computed only from the **previous** and the **current** cursor positions, and it is composed with the current orientation:
+### 6.1 Narastające składanie orientacji
+Scena przechowuje jedną macierz orientacji R o wymiarach 3×3 (konwencja wektorów kolumnowych, P' = R·P), początkowo równą macierzy jednostkowej. Każde zdarzenie ruchu myszy podczas przeciągania wyznacza mały obrót R_przyrost, obliczany wyłącznie na podstawie **poprzedniego** i **bieżącego** położenia kursora, i składa go z aktualną orientacją:
 
 ```
-R_new = R_inc · R_current
-R_new = orthonormalize(R_new)        (Gram–Schmidt)
+R_nowa = R_przyrost · R_aktualna
+R_nowa = ortonormalizacja(R_nowa)        (Gram–Schmidt)
 ```
 
-The orientation is therefore never recomputed from the position where the drag started, and no angle is ever clamped. Because R_inc is applied on the left, it acts in screen (view) space: dragging always turns the object the same way on screen, regardless of how it is already rotated. Thousands of float multiplications slowly destroy orthogonality, so the product is re-orthonormalised after every step (the first column is normalised, the second is made orthogonal to it and normalised, the third is their cross product).
+Orientacja nigdy nie jest więc wyznaczana na podstawie położenia, w którym rozpoczęto przeciąganie, a kąty nie są ograniczane. Ponieważ R_przyrost jest mnożona z lewej strony, działa w układzie ekranu (obserwatora): ten sam ruch myszy zawsze obraca obiekt tak samo względem ekranu, niezależnie od tego, jak jest już obrócony. Tysiące mnożeń zmiennoprzecinkowych stopniowo psują ortogonalność macierzy, dlatego po każdym kroku jest ona ortonormalizowana (pierwsza kolumna jest normalizowana, druga ortogonalizowana względem pierwszej i normalizowana, trzecia to ich iloczyn wektorowy).
 
-Mesh vertices are always rotated from their original, unrotated data with the accumulated R: P' = R·P, Pu' = R·Pu, Pv' = R·Pv, N' = normalize(R·N). Points rotate about the scene centre (0, 0, 0); tangents and normals are direction vectors.
+Wierzchołki siatki są zawsze obracane z oryginalnych, nieobróconych danych za pomocą złożonej macierzy R: P' = R·P, Pu' = R·Pu, Pv' = R·Pv, N' = normalize(R·N). Punkty są obracane wokół środka sceny (0, 0, 0), a wektory styczne i normalne — jako wektory kierunkowe.
 
-### 6.2 Virtual trackball (left drag)
-The drawing area is treated as if a glass ball of radius r = ½·min(width, height) sat in its centre, and the user drags its surface. A cursor position (relative to the centre, y up) p = (x, y) is mapped onto the ball:
+### 6.2 Wirtualna kula (przeciąganie lewym przyciskiem)
+Obszar rysowania traktujemy tak, jakby w jego środku znajdowała się szklana kula o promieniu r = ½·min(szerokość, wysokość), której powierzchnię użytkownik przesuwa kursorem. Położenie kursora względem środka obszaru (oś y w górę) p = (x, y) jest rzutowane na kulę:
 
 ```
 q = p / r
-if |q|² ≤ 1:   s = (qx, qy, sqrt(1 − |q|²))        point on the front hemisphere
-else:          s = (qx, qy, 0) / |q|               point on the silhouette circle
+jeżeli |q|² ≤ 1:   s = (qx, qy, sqrt(1 − |q|²))     punkt na przedniej półkuli
+w przeciwnym razie: s = (qx, qy, 0) / |q|           punkt na brzegu (konturze) kuli
 ```
 
-For two consecutive cursor positions p0 → p1 with sphere points s0, s1:
+Dla dwóch kolejnych położeń kursora p0 → p1, rzutowanych na punkty kuli s0, s1:
 
 ```
-axis  = normalize(s0 × s1)
-angle = acos(clamp(s0 · s1, −1, 1))
-R_inc = rotation about axis by angle            (Rodrigues' formula)
+oś    = normalize(s0 × s1)
+kąt   = acos(clamp(s0 · s1, −1, 1))
+R_przyrost = obrót wokół osi o kąt               (wzór Rodriguesa)
 ```
 
-(If |s0 × s1| is zero the mouse did not move and R_inc = I.) This is the shortest rotation taking s0 to s1, so the point of the ball under the cursor exactly follows the cursor — which is what makes the control intuitive:
+(Jeżeli |s0 × s1| = 0, mysz się nie przesunęła i R_przyrost = I). Jest to najkrótszy obrót przeprowadzający s0 w s1, więc punkt kuli znajdujący się pod kursorem dokładnie podąża za kursorem — dzięki temu sterowanie jest intuicyjne:
 
-- horizontal drag through the centre: s0 × s1 is parallel to the y axis → the object turns left/right about the vertical axis;
-- vertical drag: rotation about the horizontal x axis → the object tips towards / away from the viewer;
-- diagonal drag: rotation about the axis perpendicular to the drag direction;
-- drag along the outer part of the area: both points lie on the silhouette (z = 0), so s0 × s1 is parallel to z → the object spins in the screen plane, like turning a steering wheel.
+- ruch poziomy przez środek: s0 × s1 jest równoległy do osi y → obiekt obraca się w lewo/w prawo wokół osi pionowej;
+- ruch pionowy: obrót wokół poziomej osi x → obiekt pochyla się do obserwatora lub od niego;
+- ruch ukośny: obrót wokół osi prostopadłej do kierunku ruchu;
+- ruch wzdłuż zewnętrznej części obszaru: oba punkty leżą na konturze kuli (z = 0), więc s0 × s1 jest równoległy do osi z → obiekt obraca się w płaszczyźnie ekranu, jak kierownica.
 
-Rodrigues' formula for a unit axis a = (x, y, z), c = cos θ, s = sin θ, t = 1 − c:
+Wzór Rodriguesa dla wersora osi a = (x, y, z), c = cos θ, s = sin θ, t = 1 − c:
 
 ```
       | t·x·x + c     t·x·y − s·z   t·x·z + s·y |
@@ -113,38 +113,38 @@ R  =  | t·x·y + s·z   t·y·y + c     t·y·z − s·x |
       | t·x·z − s·y   t·y·z + s·x   t·z·z + c   |
 ```
 
-For a = x, y or z it reduces exactly to the matrices Rx, Ry, Rz of the assignment.
+Dla a równego osi x, y lub z wzór sprowadza się dokładnie do macierzy Rx, Ry, Rz podanych w treści zadania.
 
-### 6.3 Roll (Shift + left drag or right drag)
-The angle swept by the cursor around the centre of the drawing area between two consecutive positions is applied as a rotation about the viewing axis:
+### 6.3 Obrót wokół osi patrzenia (Shift + lewy przycisk lub prawy przycisk)
+Kąt, o jaki kursor obrócił się wokół środka obszaru rysowania między dwoma kolejnymi położeniami, jest stosowany jako obrót wokół osi z (osi patrzenia):
 
 ```
-angle = atan2(p0 × p1, p0 · p1)       (2D cross and dot product)
-R_inc = Rz(angle)
+kąt = atan2(p0 × p1, p0 · p1)       (dwuwymiarowy iloczyn wektorowy i skalarny)
+R_przyrost = Rz(kąt)
 ```
 
-Counter-clockwise mouse motion rotates the scene counter-clockwise.
+Ruch myszy przeciwny do ruchu wskazówek zegara obraca scenę w tym samym kierunku.
 
-### 6.4 Worked example
-Drawing area 800×800 (r = 400). The cursor moves from the centre p0 = (0, 0) to p1 = (40, 0):
-s0 = (0, 0, 1), s1 = (0.1, 0, 0.995); s0 × s1 = (0, 0.1, 0), so the axis is +y and the angle is acos(0.995) ≈ 5.7°. R_inc = Ry(5.7°): the front of the object moves to the right, together with the cursor.
+### 6.4 Przykład obliczeniowy
+Obszar rysowania 800×800 (r = 400). Kursor przesuwa się ze środka p0 = (0, 0) do p1 = (40, 0):
+s0 = (0, 0, 1), s1 = (0,1; 0; 0,995); s0 × s1 = (0; 0,1; 0), zatem oś to +y, a kąt to acos(0,995) ≈ 5,7°. R_przyrost = Ry(5,7°): przód obiektu przesuwa się w prawo razem z kursorem.
 
-## 7. Rendering pipeline (technical summary)
+## 7. Potok renderowania (opis techniczny)
 
-- **Surface**: P(u,v) = Σ Σ V(i,j)·B(i,3)(u)·B(j,3)(v); Pu and Pv are the exact partial derivatives (degree-2 Bernstein form); N = normalize(Pu × Pv).
-- **Triangulation**: a uniform (n+1)×(n+1) grid in (u, v), two triangles per cell; each vertex stores P, Pu, Pv, N before and after rotation and its (u, v).
-- **Projection**: orthographic onto the xy plane; the origin is the centre of the drawing area and y points up. The scale makes the sphere around all control points fit the area, so the surfaces fit at every rotation.
-- **Filling**: every triangle is filled independently with the scan-line algorithm with a bucket-sorted edge table (ET buckets indexed by the first scan line; the active edge table is sorted by x on every line). Pixel centres are sampled with the top-left rule, so neighbouring triangles neither overlap nor leave gaps.
-- **Per-pixel colour**: for each pixel the barycentric coordinates in the projected triangle are computed (exact for an orthographic projection) and used to interpolate z, N, Pu, Pv, u and v. N is renormalised.
-- **Z-buffer**: the observer looks from +z (V = [0, 0, 1]); a pixel is written only if its z is larger (nearer) than the stored value.
-- **Normal map** (optional): N_tex = 2·RGB/255 − 1 (normalised), M = [Pu, Pv, N] (columns, Pu and Pv normalised), N = normalize(M · N_tex).
-- **Lighting**, separately for R, G, B with values in 0–1:
+- **Powierzchnia**: P(u,v) = Σ Σ V(i,j)·B(i,3)(u)·B(j,3)(v); Pu i Pv to dokładne pochodne cząstkowe (postać Bernsteina stopnia 2); N = normalize(Pu × Pv).
+- **Triangulacja**: regularna siatka (n+1)×(n+1) w dziedzinie (u, v), dwa trójkąty na komórkę; każdy wierzchołek przechowuje P, Pu, Pv, N przed obrotem i po obrocie oraz parametry (u, v).
+- **Rzutowanie**: rzut prostokątny na płaszczyznę xy; początek układu współrzędnych znajduje się w środku obszaru rysowania, oś y jest skierowana w górę. Skala jest dobrana tak, aby sfera zawierająca wszystkie punkty kontrolne mieściła się w obszarze rysowania, więc powierzchnie mieszczą się przy każdym obrocie.
+- **Wypełnianie**: każdy trójkąt jest wypełniany niezależnie algorytmem przeglądania liniami poziomymi z kubełkowym sortowaniem krawędzi (tablica krawędzi ET z kubełkami indeksowanymi pierwszą linią skanowania; tablica krawędzi aktywnych AET sortowana po x w każdej linii). Próbkowane są środki pikseli z regułą „górna-lewa krawędź”, więc sąsiednie trójkąty nie nachodzą na siebie i nie zostawiają szczelin.
+- **Kolor piksela**: dla każdego piksela wyznaczane są współrzędne barycentryczne w rzutowanym trójkącie (dokładne dla rzutu prostokątnego) i na ich podstawie interpolowane są z, N, Pu, Pv, u oraz v. Wektor N jest ponownie normalizowany.
+- **Bufor głębokości (Z-buffer)**: obserwator patrzy z kierunku +z (V = [0, 0, 1]); piksel jest zapisywany tylko wtedy, gdy jego z jest większe (bliżej obserwatora) niż wartość zapisana w buforze.
+- **Mapa wektorów normalnych** (opcjonalnie): N_tekstury = 2·RGB/255 − 1 (znormalizowany), M = [Pu, Pv, N] (kolumny; Pu i Pv znormalizowane), N = normalize(M · N_tekstury).
+- **Oświetlenie**, osobno dla składowych R, G, B, wartości z przedziału 0–1:
 
 ```
 I = kd·IL·IO·cos(N, L) + ks·IL·IO·cos^m(V, R)
-L = normalize(light − P),  V = [0, 0, 1],  R = 2⟨N, L⟩N − L
+L = normalize(światło − P),  V = [0, 0, 1],  R = 2⟨N, L⟩N − L
 ```
 
-  negative cosines are replaced by 0; only the final result is multiplied by 255 and clamped to 255.
-- **Light**: a point light moving along a closed curve of four cubic Bézier segments in the plane z = const, in view space (it does not rotate with the scene).
-- **Performance**: horizontal bands of the image are rendered in parallel; each band owns its rows of the colour and depth buffers.
+  ujemne wartości cosinusów są zastępowane zerem; dopiero wynik końcowy jest mnożony przez 255 i ograniczany do 255.
+- **Światło**: punktowe źródło światła poruszające się po zamkniętej krzywej złożonej z czterech segmentów Béziera trzeciego stopnia w płaszczyźnie z = const, w układzie obserwatora (krzywa nie obraca się razem ze sceną).
+- **Wydajność**: poziome pasy obrazu są renderowane równolegle; każdy pas ma na wyłączność swoje wiersze bufora koloru i bufora głębokości.
