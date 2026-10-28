@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BezierSurfaceRenderer.App/BezierSurfaceRenderer.App.csproj" />
+    <Project Path="src/BezierSurfaceRenderer.Core/BezierSurfaceRenderer.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BezierSurfaceRenderer.Core.Tests/BezierSurfaceRenderer.Core.Tests.csproj" />
+  </Folder>
+</Solution>

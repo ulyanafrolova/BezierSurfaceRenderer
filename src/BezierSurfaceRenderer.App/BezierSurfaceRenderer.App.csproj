@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Lets the project compile on macOS/Linux; it only RUNS on Windows. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <AssemblyName>BezierSurfaceRenderer</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BezierSurfaceRenderer.Core\BezierSurfaceRenderer.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- surfaces.txt, default texture and normal maps ship next to the .exe -->
+    <None Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="Assets" />
+    <EmbeddedResource Include="Docs\Help.md" LogicalName="Help.md" />
+  </ItemGroup>
+
+</Project>
