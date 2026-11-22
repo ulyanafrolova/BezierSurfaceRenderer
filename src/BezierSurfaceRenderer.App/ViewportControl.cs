@@ -26,6 +26,8 @@ public sealed class ViewportControl : Control
     private const float FitMargin = 1.05f;
     private const float HandleHitPixels = 9f;
 
+    private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+    private TimeSpan _lastPaint;
     private FrameBuffer? _frame;
     private Bitmap? _bitmap;
     private DragMode _drag;
@@ -157,6 +159,12 @@ public sealed class ViewportControl : Control
 
     protected override void OnPaint(PaintEventArgs e)
     {
+        // Animate here rather than in the timer: while a slider or the scene is dragged, the WinForms timer
+        // gets no messages (WM_TIMER has the lowest priority), but every repaint still moves the light.
+        var now = _clock.Elapsed;
+        Light?.Advance(now - _lastPaint);
+        _lastPaint = now;
+
         var g = e.Graphics;
         int w = ClientSize.Width, h = ClientSize.Height;
         g.Clear(Background);

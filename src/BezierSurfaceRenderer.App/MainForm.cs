@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Numerics;
 
 namespace BezierSurfaceRenderer.App;
@@ -24,8 +23,6 @@ public sealed class MainForm : Form
     private readonly LightSource _light;
     private readonly ViewportControl _viewport = new() { Dock = DockStyle.Fill };
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 15 };
-    private readonly Stopwatch _clock = Stopwatch.StartNew();
-    private TimeSpan _lastTick;
 
     private Texture? _normalMap;
     private Color _lightColor = Color.White;
@@ -93,14 +90,10 @@ public sealed class MainForm : Form
         _objectColor.BackColor = ToColor(surface.SolidColor);
     }
 
+    /// <summary>Only requests a redraw; the viewport moves the light by the real time elapsed since its last frame.</summary>
     private void OnTick(object? sender, EventArgs e)
     {
-        var now = _clock.Elapsed;
-        var dt = now - _lastTick;
-        _lastTick = now;
-        if (!_light.IsRunning) return;
-        _light.Advance(dt);
-        _viewport.Invalidate();
+        if (_light.IsRunning) _viewport.Invalidate();
     }
 
     private void SyncViewFlags()
