@@ -48,6 +48,7 @@ public sealed class MainForm : Form
         MinimumSize = new Size(800, 600);
         Size = new Size(1200, 800);
         StartPosition = FormStartPosition.CenterScreen;
+        WindowState = FormWindowState.Maximized; // at 150 % scaling the default size would not fit the screen
         KeyPreview = true;
 
         LoadDefaultAssets();
@@ -293,6 +294,8 @@ public sealed class MainForm : Form
         _animate = Check("Animate light", true);
         _editPath = Check("Edit light path", false);
         Add(_lightColorButton, _animate, _editPath);
+        // FlowLayoutPanel ignores its bottom padding when scrolling; an empty spacer lets the last row scroll fully into view.
+        Add(new Label { Height = 30 });
 
         return panel;
     }
