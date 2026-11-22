@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 
-namespace BezierSurfaceRenderer.Core.Geometry;
+namespace BezierSurfaceRenderer.Core;
 
 public sealed class SurfaceFileException(string message) : Exception(message);
 

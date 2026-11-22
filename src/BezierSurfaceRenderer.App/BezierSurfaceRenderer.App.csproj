@@ -8,10 +8,13 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>BezierSurfaceRenderer</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BezierSurfaceRenderer.Core\BezierSurfaceRenderer.Core.csproj" />
+    <Using Include="BezierSurfaceRenderer.Core" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,13 +31,14 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 | 1 | Pokazuje / ukrywa wieloboki Béziera (siatki kontrolne) |
 | 2 | Pokazuje / ukrywa siatkę trójkątów |
 | 3 | Pokazuje / ukrywa wypełnione trójkąty |
-| T | Przełącza kolor obiektu: jednolity kolor / tekstura |
+| S | Wybiera następną powierzchnię, której kolor obiektu IO jest edytowany |
+| T | Przełącza kolor obiektu wybranej powierzchni: jednolity kolor / tekstura |
 | N | Włącza / wyłącza mapę wektorów normalnych |
 | [ oraz ] | Zmniejsza / zwiększa dokładność triangulacji |
-| Ctrl+T | Wczytuje teksturę |
+| Ctrl+T | Wczytuje teksturę dla wybranej powierzchni |
 | Ctrl+N | Wczytuje mapę wektorów normalnych |
 | Ctrl+L | Wybór koloru światła IL |
-| Ctrl+K | Wybór jednolitego koloru obiektu IO |
+| Ctrl+K | Wybór jednolitego koloru obiektu IO wybranej powierzchni |
 | Strzałki, PgUp/PgDn, Home/End | Zmiana wartości aktywnego suwaka |
 
 ## 4. Panel sterowania
@@ -50,7 +51,7 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 
 ### Material (materiał)
 - **kd**, **ks** (0–1) oraz **m** (1–100) — współczynniki modelu oświetlenia, jednakowe dla wszystkich trójkątów.
-- **Object color IO** — **jednolity kolor** (próbka koloru lub menu Colors) albo **tekstura**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie; inną można wczytać przyciskiem „Load…”.
+- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy (lub klawiszem S), a potem **jednolity kolor** (próbka koloru lub menu Colors) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load…”.
 
 ### Surface detail (szczegóły powierzchni)
 - **Normal map** — modyfikacja wektora normalnego na podstawie wczytanej mapy wektorów normalnych (domyślnie: cegły; w katalogu `Assets/normalmaps` jest też mapa ze sferą).
@@ -59,7 +60,7 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 - **Light z** — współrzędna z płaszczyzny, w której porusza się światło.
 - **Light color IL** — kolor światła, domyślnie biały.
 - **Animate light** — światło porusza się po zamkniętej krzywej Béziera; odznaczenie pola (lub Spacja) zatrzymuje animację.
-- **Edit light path** — pokazuje punkty kontrolne krzywej: kwadraty leżą na krzywej, kółka to uchwyty styczne. Przeciągnięcie kwadratu przesuwa go razem z uchwytami; przeciągnięcie uchwytu symetrycznie przesuwa przeciwległy uchwyt, dzięki czemu krzywa pozostaje gładka (ciągłość C1). Jasny punkt to aktualne położenie źródła światła.
+- **Edit light path** — pokazuje wielobok kontrolny krzywej (punkty V0 … V7; większy kwadrat to V0 = V8). Każdy punkt można przeciągnąć myszą. Jasny punkt na krzywej to aktualne położenie źródła światła.
 
 W lewym górnym rogu obszaru rysowania wyświetlane są: czas generowania klatki, liczba trójkątów, położenie światła i stan animacji. Wskaźnik w lewym dolnym rogu pokazuje aktualne kierunki osi x (czerwona), y (zielona) i z (niebieska).
 
@@ -145,6 +146,6 @@ I = kd·IL·IO·cos(N, L) + ks·IL·IO·cos^m(V, R)
 L = normalize(światło − P),  V = [0, 0, 1],  R = 2⟨N, L⟩N − L
 ```
 
-  ujemne wartości cosinusów są zastępowane zerem; dopiero wynik końcowy jest mnożony przez 255 i ograniczany do 255.
-- **Światło**: punktowe źródło światła poruszające się po zamkniętej krzywej złożonej z czterech segmentów Béziera trzeciego stopnia w płaszczyźnie z = const, w układzie obserwatora (krzywa nie obraca się razem ze sceną).
+  uwzględniane są **obie strony powierzchni**: jeżeli interpolowany wektor normalny jest odwrócony od obserwatora (N_z < 0), jest zastępowany przez −N, więc spód powierzchni jest oświetlany tak samo jak wierzch. Ujemny cosinus oznacza, że światło jest po drugiej stronie powierzchni — dany składnik wynosi wtedy 0. Dopiero wynik końcowy jest mnożony przez 255 i ograniczany do 255.
+- **Światło**: punktowe źródło światła poruszające się po zamkniętej krzywej Béziera stopnia 8 (punkty kontrolne V0 … V8, V8 = V0, czyli 9 punktów, w tym 8 różnych) w płaszczyźnie z = const, w układzie obserwatora (krzywa nie obraca się razem ze sceną). Punkt krzywej dla parametru t jest wyznaczany algorytmem de Casteljau; t rośnie z prędkością 0,1 okrążenia na sekundę.
 - **Wydajność**: poziome pasy obrazu są renderowane równolegle; każdy pas ma na wyłączność swoje wiersze bufora koloru i bufora głębokości.

@@ -1,8 +1,7 @@
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using BezierSurfaceRenderer.Core.Rendering;
 
-namespace BezierSurfaceRenderer.App.Imaging;
+namespace BezierSurfaceRenderer.App;
 
 /// <summary>The only place GDI+ bitmaps meet Core types (keeps Core testable on any OS).</summary>
 internal static class BitmapInterop
@@ -25,7 +24,7 @@ internal static class BitmapInterop
         {
             argb.UnlockBits(data);
         }
-        return new Texture(w, h, pixels);
+        return new Texture(w, h, pixels) { Name = Path.GetFileName(path) };
     }
 
     /// <summary>Copies FrameBuffer.Color into a 32bpp bitmap of the same size.</summary>

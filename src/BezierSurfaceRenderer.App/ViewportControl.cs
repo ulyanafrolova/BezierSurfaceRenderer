@@ -2,14 +2,9 @@ using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Numerics;
-using BezierSurfaceRenderer.App.Imaging;
-using BezierSurfaceRenderer.Core.Geometry;
-using BezierSurfaceRenderer.Core.Interaction;
-using BezierSurfaceRenderer.Core.Rendering;
-using BezierSurfaceRenderer.Core.SceneModel;
-using T = BezierSurfaceRenderer.App.Theme.Theme;
+using T = BezierSurfaceRenderer.App.Theme;
 
-namespace BezierSurfaceRenderer.App.Controls;
+namespace BezierSurfaceRenderer.App;
 
 /// <summary>
 /// Drawing area. Per frame:
@@ -17,7 +12,7 @@ namespace BezierSurfaceRenderer.App.Controls;
 ///   2. Overlays with GDI+ using the spec's transform (ScaleTransform(1,−1) + TranslateTransform(W/2, −H/2)),
 ///      so the origin is at the centre, y up: wireframe, Bézier control nets, light path + light marker.
 ///   3. HUD and orientation gizmo in plain screen coordinates.
-/// Mouse: left drag → ArcballController.TrackballIncrement; Shift+left or right drag → RollIncrement;
+/// Mouse: left drag → Arcball.TrackballIncrement; Shift+left or right drag → Arcball.RollIncrement;
 /// in "edit light path" mode left drag moves curve control points instead (rotation disabled).
 /// Pixel scale = 0.5·min(W,H) / (1.05·r), r = radius of the sphere around all control points; by the
 /// convex-hull property the surfaces stay inside it, so they fit the viewport at any rotation.
@@ -29,8 +24,6 @@ public sealed class ViewportControl : Control
     private const float FitMargin = 1.05f;
     private const float HandleHitPixels = 9f;
 
-    private readonly SceneRenderer _renderer = new();
-    private readonly ArcballController _arcball = new();
     private readonly Stopwatch _frameClock = new();
 
     private FrameBuffer? _frame;
@@ -50,7 +43,7 @@ public sealed class ViewportControl : Control
     }
 
     public Scene? Scene { get; set; }
-    public LightAnimator? Light { get; set; }
+    public LightSource? Light { get; set; }
 
     /// <summary>Supplies the current material/light settings; called once per rendered frame.</summary>
     public Func<RenderSettings>? SettingsSource { get; set; }
@@ -93,7 +86,7 @@ public sealed class ViewportControl : Control
         {
             if (e.Button == MouseButtons.Left && Light != null)
             {
-                _dragPoint = Light.Path.HitTest(ToModel(e.Location), HandleHitPixels / PixelsPerUnit) ?? -1;
+                _dragPoint = Light.HitTest(ToModel(e.Location), HandleHitPixels / PixelsPerUnit) ?? -1;
                 _drag = _dragPoint >= 0 ? DragMode.LightPoint : DragMode.None;
             }
             return;
@@ -115,20 +108,20 @@ public sealed class ViewportControl : Control
         switch (_drag)
         {
             case DragMode.Trackball when Scene != null:
-                _arcball.Radius = 0.5f * Math.Min(ClientSize.Width, ClientSize.Height);
-                Scene.Rotate(_arcball.TrackballIncrement(ToCentred(_lastMouse), ToCentred(e.Location)));
+                float radius = 0.5f * Math.Min(ClientSize.Width, ClientSize.Height);
+                Scene.Rotate(Arcball.TrackballIncrement(ToCentred(_lastMouse), ToCentred(e.Location), radius));
                 Invalidate();
                 break;
             case DragMode.Roll when Scene != null:
-                Scene.Rotate(_arcball.RollIncrement(ToCentred(_lastMouse), ToCentred(e.Location)));
+                Scene.Rotate(Arcball.RollIncrement(ToCentred(_lastMouse), ToCentred(e.Location)));
                 Invalidate();
                 break;
             case DragMode.LightPoint when Light != null:
-                Light.Path.MovePoint(_dragPoint, ToModel(e.Location));
+                Light.Points[_dragPoint] = ToModel(e.Location);
                 Invalidate();
                 break;
             case DragMode.None when EditLightPath && Light != null:
-                int hover = Light.Path.HitTest(ToModel(e.Location), HandleHitPixels / PixelsPerUnit) ?? -1;
+                int hover = Light.HitTest(ToModel(e.Location), HandleHitPixels / PixelsPerUnit) ?? -1;
                 if (hover != _hoverPoint)
                 {
                     _hoverPoint = hover;
@@ -178,7 +171,7 @@ public sealed class ViewportControl : Control
             EnsureBuffers(w, h);
             _frame!.PixelsPerUnit = PixelsPerUnit;
             _frame.Clear(T.Background.ToArgb());
-            _renderer.RenderFilled(_frame, Scene.Meshes, settings);
+            SceneRenderer.RenderFilled(_frame, Scene.Meshes, settings);
             BitmapInterop.CopyToBitmap(_frame, _bitmap!);
             // 1:1 copy; explicit size so GDI+ never rescales by the bitmap's DPI.
             g.CompositingMode = CompositingMode.SourceCopy;
@@ -262,11 +255,10 @@ public sealed class ViewportControl : Control
     private void DrawLight(Graphics g)
     {
         var light = Light!;
-        var curve = light.Path;
 
         const int samples = 240;
         var pts = new PointF[samples + 1];
-        for (int k = 0; k <= samples; k++) pts[k] = ToOverlay(curve.Evaluate((float)k / samples));
+        for (int k = 0; k <= samples; k++) pts[k] = ToOverlay(light.Evaluate((float)k / samples));
         using (var pen = new Pen(Color.FromArgb(EditLightPath ? 230 : 150, T.AccentAlt), EditLightPath ? 2f : 1.5f))
         {
             if (!EditLightPath) pen.DashPattern = [4f, 3f];
@@ -275,23 +267,17 @@ public sealed class ViewportControl : Control
 
         if (EditLightPath)
         {
-            using var handlePen = new Pen(Color.FromArgb(150, T.AccentAlt), 1f);
-            using var jointBrush = new SolidBrush(T.AccentAlt);
-            using var handleBrush = new SolidBrush(T.Background);
+            // Control polygon V0 … V(n−1) closed back to V0 (= Vn); V0 drawn larger.
+            using var polygonPen = new Pen(Color.FromArgb(150, T.AccentAlt), 1f);
+            using var pointBrush = new SolidBrush(T.AccentAlt);
             using var hoverPen = new Pen(T.Text, 2f);
-            int n = curve.Points.Count;
-            for (int k = 0; k < n; k += 3)
+            g.DrawPolygon(polygonPen, light.Points.Select(p => ToOverlay(p)).ToArray());
+            for (int k = 0; k < light.Points.Count; k++)
             {
-                g.DrawLine(handlePen, ToOverlay(curve.Points[(k + n - 1) % n]), ToOverlay(curve.Points[k]));
-                g.DrawLine(handlePen, ToOverlay(curve.Points[k]), ToOverlay(curve.Points[k + 1]));
-            }
-            for (int k = 0; k < n; k++)
-            {
-                var p = ToOverlay(curve.Points[k]);
-                var rect = new RectangleF(p.X - 5, p.Y - 5, 10, 10);
-                if (ClosedBezierCurve.IsJoint(k)) g.FillRectangle(jointBrush, rect);
-                else { g.FillEllipse(handleBrush, rect); g.DrawEllipse(handlePen, rect); }
-                if (k == _hoverPoint || k == _dragPoint) g.DrawRectangle(hoverPen, p.X - 7, p.Y - 7, 14, 14);
+                var p = ToOverlay(light.Points[k]);
+                float r = k == 0 ? 7 : 5;
+                g.FillRectangle(pointBrush, p.X - r, p.Y - r, 2 * r, 2 * r);
+                if (k == _hoverPoint || k == _dragPoint) g.DrawRectangle(hoverPen, p.X - 8, p.Y - 8, 16, 16);
             }
         }
 

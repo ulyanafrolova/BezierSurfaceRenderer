@@ -1,7 +1,6 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Mathematics;
 
-namespace BezierSurfaceRenderer.Core.Rendering;
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
 /// UI-independent image (decoded once from a GDI+ Bitmap in the App layer).
@@ -13,6 +12,7 @@ public sealed class Texture
 
     public int Width { get; }
     public int Height { get; }
+    public string Name { get; init; } = "";
 
     /// <param name="argbPixels">Row-major 32-bit ARGB, row 0 = top of image.</param>
     public Texture(int width, int height, int[] argbPixels)

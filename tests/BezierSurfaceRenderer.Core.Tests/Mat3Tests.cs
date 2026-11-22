@@ -1,5 +1,4 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Mathematics;
 using static BezierSurfaceRenderer.Core.Tests.TestUtil;
 
 namespace BezierSurfaceRenderer.Core.Tests;

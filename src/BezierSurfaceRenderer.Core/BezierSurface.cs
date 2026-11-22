@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace BezierSurfaceRenderer.Core.Geometry;
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>Point and first derivatives of a surface at (u, v).</summary>
 public readonly record struct SurfaceSample(Vector3 P, Vector3 Pu, Vector3 Pv, Vector3 N);
@@ -19,6 +19,15 @@ public sealed class BezierSurface
     public const int PointsPerSurface = 16;
 
     public Vector3[,] ControlPoints { get; }
+
+    // Object colour IO, chosen independently for each surface (spec §4.6).
+    public Vector3 SolidColor { get; set; } = new(0.85f, 0.88f, 0.93f);
+    public Texture? Texture { get; set; }
+    public bool UseTexture { get; set; }
+
+    /// <summary>IO at (u, v): texel of this surface's texture or its solid colour.</summary>
+    public Vector3 ObjectColor(float u, float v) =>
+        UseTexture && Texture != null ? Texture.Sample(u, v) : SolidColor;
 
     public BezierSurface(Vector3[,] controlPoints)
     {

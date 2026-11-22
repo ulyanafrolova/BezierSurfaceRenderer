@@ -1,8 +1,4 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Geometry;
-using BezierSurfaceRenderer.Core.Interaction;
-using BezierSurfaceRenderer.Core.Mathematics;
-using BezierSurfaceRenderer.Core.SceneModel;
 using static BezierSurfaceRenderer.Core.Tests.TestUtil;
 
 namespace BezierSurfaceRenderer.Core.Tests;
@@ -68,13 +64,12 @@ public class SceneTests
     public void UnboundedRotation_StaysOrthonormal()
     {
         var scene = new Scene(Surfaces, 1);
-        var arcball = new ArcballController { Radius = 300 };
         var rng = new Random(1);
         var p = new Vector2(0, 0);
         for (int k = 0; k < 10000; k++)
         {
             var q = p + new Vector2(rng.Next(-15, 16), rng.Next(-15, 16));
-            scene.Rotate(arcball.TrackballIncrement(p, q));
+            scene.Rotate(Arcball.TrackballIncrement(p, q, 300));
             p = Vector2.Clamp(q, new(-400), new(400));
         }
         Mat3Tests.AssertOrthonormal(scene.Orientation, 1e-5f);
@@ -83,17 +78,15 @@ public class SceneTests
     [Fact]
     public void Arcball_PointUnderCursorFollowsCursor()
     {
-        var arcball = new ArcballController { Radius = 100 };
         Vector2 p0 = new(10, -20), p1 = new(35, 5);
-        var r = arcball.TrackballIncrement(p0, p1);
-        Near(arcball.ProjectToSphere(p1), r * arcball.ProjectToSphere(p0));
+        var r = Arcball.TrackballIncrement(p0, p1, 100);
+        Near(Arcball.ProjectToSphere(p1, 100), r * Arcball.ProjectToSphere(p0, 100));
     }
 
     [Fact]
     public void Arcball_DragRightRotatesFrontTowardsPlusX()
     {
-        var arcball = new ArcballController { Radius = 100 };
-        var front = arcball.TrackballIncrement(Vector2.Zero, new Vector2(20, 0)) * Vector3.UnitZ;
+        var front = Arcball.TrackballIncrement(Vector2.Zero, new Vector2(20, 0), 100) * Vector3.UnitZ;
         Assert.True(front.X > 0);
         Near(0f, front.Y);
     }
@@ -101,14 +94,14 @@ public class SceneTests
     [Fact]
     public void Arcball_ZeroMovementIsIdentity()
     {
-        var r = new ArcballController { Radius = 100 }.TrackballIncrement(new(5, 5), new(5, 5));
+        var r = Arcball.TrackballIncrement(new(5, 5), new(5, 5), 100);
         Near(Vector3.UnitX, r * Vector3.UnitX);
     }
 
     [Fact]
     public void Roll_CounterClockwiseIsPositiveZRotation()
     {
-        var r = new ArcballController().RollIncrement(new Vector2(100, 0), new Vector2(0, 100));
+        var r = Arcball.RollIncrement(new Vector2(100, 0), new Vector2(0, 100));
         Near(Vector3.UnitY, r * Vector3.UnitX);
     }
 

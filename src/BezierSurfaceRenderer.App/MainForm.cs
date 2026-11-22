@@ -1,11 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
-using BezierSurfaceRenderer.App.Controls;
-using BezierSurfaceRenderer.App.Imaging;
-using BezierSurfaceRenderer.Core.Geometry;
-using BezierSurfaceRenderer.Core.Rendering;
-using BezierSurfaceRenderer.Core.SceneModel;
-using T = BezierSurfaceRenderer.App.Theme.Theme;
+using T = BezierSurfaceRenderer.App.Theme;
 
 namespace BezierSurfaceRenderer.App;
 
@@ -16,7 +11,7 @@ namespace BezierSurfaceRenderer.App;
 ///   Left        ViewportControl (fills)
 ///   Right       control panel, grouped:
 ///     GEOMETRY  slider "Triangulation" · checkboxes Bézier control net / Triangle mesh / Filled triangles
-///     MATERIAL  sliders kd, ks, m · radios Solid color / Texture
+///     MATERIAL  sliders kd, ks, m · surface picker · radios Solid color / Texture (per surface)
 ///     SURFACE   checkbox Normal map
 ///     LIGHT     slider Light z · checkboxes Animate / Edit light path
 /// Owns the render loop timer (≈60 Hz while the light animates; on-demand redraw otherwise).
@@ -28,25 +23,24 @@ public sealed class MainForm : Form
     private const int ContentWidth = PanelWidth - 2 * 16 - SystemScrollAllowance;
     private const int SystemScrollAllowance = 18;
 
+    private const float LightPathRadius = 2.0f;
+
     private static readonly string AssetsDir = Path.Combine(AppContext.BaseDirectory, "Assets");
 
     private readonly Scene _scene;
-    private readonly LightAnimator _light;
+    private readonly LightSource _light;
     private readonly ViewportControl _viewport = new() { Dock = DockStyle.Fill };
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 15 };
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private TimeSpan _lastTick;
 
-    private Texture? _texture;
     private Texture? _normalMap;
-    private string _textureName = "(none)";
-    private string _normalMapName = "(none)";
     private Color _lightColor = Color.White;
-    private Color _objectColor = Color.FromArgb(0xD8, 0xE0, 0xEC);
 
     // Controls
     private LabeledSlider _divisions = null!, _kd = null!, _ks = null!, _m = null!, _lightZ = null!;
     private CheckBox _showNet = null!, _showMesh = null!, _showFill = null!;
+    private ComboBox _surfacePicker = null!;
     private RadioButton _solid = null!, _textured = null!;
     private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!;
     private Panel _lightSwatch = null!, _objectSwatch = null!;
@@ -55,7 +49,7 @@ public sealed class MainForm : Form
     public MainForm(Scene scene)
     {
         _scene = scene;
-        _light = new LightAnimator(ClosedBezierCurve.CreateDefault(1.2f), 2.5f);
+        _light = LightSource.CreateDefault(LightPathRadius, 2.5f);
 
         SuspendLayout();
         AutoScaleDimensions = new SizeF(96f, 96f); // layout is authored at 100 %; scale for higher DPI
@@ -87,15 +81,30 @@ public sealed class MainForm : Form
     // ---------------------------------------------------------------- settings
 
     private RenderSettings CurrentSettings() => new(
-        new LightingParameters(_kd.Value, _ks.Value, (int)_m.Value, ToVector(_lightColor)),
-        _light.Position,
-        _textured.Checked ? ObjectColorSource.Texture : ObjectColorSource.SolidColor,
-        ToVector(_objectColor),
-        _texture,
-        _normalMapOn.Checked,
-        _normalMap);
+        _kd.Value, _ks.Value, (int)_m.Value, ToVector(_lightColor), _light.Position,
+        _normalMapOn.Checked ? _normalMap : null);
 
     private static Vector3 ToVector(Color c) => new Vector3(c.R, c.G, c.B) / 255f;
+    private static Color ToColor(Vector3 v) => Color.FromArgb((int)(v.X * 255), (int)(v.Y * 255), (int)(v.Z * 255));
+
+    /// <summary>Surface whose object colour IO is edited by the panel (IO is chosen per surface).</summary>
+    private BezierSurface SelectedSurface => _scene.Surfaces[Math.Max(0, _surfacePicker.SelectedIndex)];
+
+    /// <summary>Shows the selected surface's IO in the panel.</summary>
+    private void ShowSelectedMaterial()
+    {
+        var surface = SelectedSurface;
+        _solid.Checked = !surface.UseTexture;
+        _textured.Checked = surface.UseTexture;
+        _objectSwatch.BackColor = ToColor(surface.SolidColor);
+        _textureLabel.Text = surface.Texture?.Name ?? "(none)";
+    }
+
+    private void SetUseTexture(bool useTexture)
+    {
+        SelectedSurface.UseTexture = useTexture;
+        _viewport.Invalidate();
+    }
 
     private void OnTick(object? sender, EventArgs e)
     {
@@ -119,20 +128,20 @@ public sealed class MainForm : Form
 
     // ---------------------------------------------------------------- assets
 
+    /// <summary>Default texture on every surface (the second one starts textured), bricks normal map.</summary>
     private void LoadDefaultAssets()
     {
-        TryLoad(Path.Combine(AssetsDir, "textures", "default.png"), isNormalMap: false, quiet: true);
-        TryLoad(Path.Combine(AssetsDir, "normalmaps", "bricks.png"), isNormalMap: true, quiet: true);
+        var texture = TryLoad(Path.Combine(AssetsDir, "textures", "default.png"), quiet: true);
+        foreach (var surface in _scene.Surfaces) surface.Texture = texture;
+        _scene.Surfaces[1].UseTexture = texture != null;
+        _normalMap = TryLoad(Path.Combine(AssetsDir, "normalmaps", "bricks.png"), quiet: true);
     }
 
-    private bool TryLoad(string path, bool isNormalMap, bool quiet)
+    private Texture? TryLoad(string path, bool quiet)
     {
         try
         {
-            var texture = BitmapInterop.LoadTexture(path);
-            if (isNormalMap) { _normalMap = texture; _normalMapName = Path.GetFileName(path); }
-            else { _texture = texture; _textureName = Path.GetFileName(path); }
-            return true;
+            return BitmapInterop.LoadTexture(path);
         }
         catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException or OutOfMemoryException)
         {
@@ -140,7 +149,7 @@ public sealed class MainForm : Form
             if (!quiet)
                 MessageBox.Show(this, $"Could not load image:\n{path}\n\n{ex.Message}", "Load image",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return null;
         }
     }
 
@@ -153,19 +162,34 @@ public sealed class MainForm : Form
             InitialDirectory = Path.Combine(AssetsDir, isNormalMap ? "normalmaps" : "textures"),
         };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        if (!TryLoad(dialog.FileName, isNormalMap, quiet: false)) return;
+        if (TryLoad(dialog.FileName, quiet: false) is not { } texture) return;
 
-        if (isNormalMap) { _normalMapLabel.Text = _normalMapName; _normalMapOn.Checked = true; }
-        else { _textureLabel.Text = _textureName; _textured.Checked = true; }
+        if (isNormalMap)
+        {
+            _normalMap = texture;
+            _normalMapLabel.Text = texture.Name;
+            _normalMapOn.Checked = true;
+        }
+        else
+        {
+            SelectedSurface.Texture = texture;
+            SelectedSurface.UseTexture = true;
+            ShowSelectedMaterial();
+        }
         _viewport.Invalidate();
     }
 
     private void PickColor(bool light)
     {
-        using var dialog = new ColorDialog { FullOpen = true, Color = light ? _lightColor : _objectColor };
+        using var dialog = new ColorDialog { FullOpen = true, Color = light ? _lightColor : ToColor(SelectedSurface.SolidColor) };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         if (light) { _lightColor = dialog.Color; _lightSwatch.BackColor = dialog.Color; }
-        else { _objectColor = dialog.Color; _objectSwatch.BackColor = dialog.Color; _solid.Checked = true; }
+        else
+        {
+            SelectedSurface.SolidColor = ToVector(dialog.Color);
+            SelectedSurface.UseTexture = false;
+            ShowSelectedMaterial();
+        }
         _viewport.Invalidate();
     }
 
@@ -195,6 +219,7 @@ public sealed class MainForm : Form
             case Keys.D2: _showMesh.Checked = !_showMesh.Checked; return true;
             case Keys.D3: _showFill.Checked = !_showFill.Checked; return true;
             case Keys.T: (_textured.Checked ? _solid : _textured).Checked = true; return true;
+            case Keys.S: _surfacePicker.SelectedIndex = (_surfacePicker.SelectedIndex + 1) % _surfacePicker.Items.Count; return true;
             case Keys.N: _normalMapOn.Checked = !_normalMapOn.Checked; return true;
             case Keys.OemOpenBrackets: _divisions.Value -= 1; return true;
             case Keys.OemCloseBrackets: _divisions.Value += 1; return true;
@@ -223,7 +248,7 @@ public sealed class MainForm : Form
 
         var colors = new ToolStripMenuItem("&Colors");
         colors.DropDownItems.Add(Item("&Light color (IL)…", "Ctrl+L", () => PickColor(true)));
-        colors.DropDownItems.Add(Item("&Object color (IO)…", "Ctrl+K", () => PickColor(false)));
+        colors.DropDownItems.Add(Item("&Object color (IO) of selected surface…", "Ctrl+K", () => PickColor(false)));
 
         var help = new ToolStripMenuItem("&Help");
         help.DropDownItems.Add(Item("&Documentation", "F1", ShowHelp));
@@ -292,23 +317,34 @@ public sealed class MainForm : Form
         flow.Controls.AddRange([_kd, _ks, _m]);
         foreach (var s in new[] { _kd, _ks, _m }) s.ValueChanged += (_, _) => _viewport.Invalidate();
 
-        flow.Controls.Add(Caption("Object color IO"));
+        flow.Controls.Add(Caption("Object color IO of surface   [S]"));
+        _surfacePicker = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList, Width = ContentWidth - 6, FlatStyle = FlatStyle.Flat,
+            BackColor = T.PanelRaised, ForeColor = T.Text, Margin = new Padding(3, 2, 0, 4),
+        };
+        for (int k = 0; k < _scene.Surfaces.Count; k++) _surfacePicker.Items.Add($"Surface {k + 1}");
+        _surfacePicker.SelectedIndex = 0;
+        _surfacePicker.SelectedIndexChanged += (_, _) => ShowSelectedMaterial();
+        flow.Controls.Add(_surfacePicker);
+
         _solid = Radio("Solid color", true);
-        _objectSwatch = Swatch(_objectColor, () => PickColor(false));
+        _objectSwatch = Swatch(Color.White, () => PickColor(false));
         flow.Controls.Add(Row(_solid, _objectSwatch));
         _textured = Radio("Texture", false);
-        _textureLabel = FileLabel(_textureName);
+        _textureLabel = FileLabel("(none)");
         flow.Controls.Add(Row(_textured, MiniButton("Load…", () => LoadImage(false))));
         flow.Controls.Add(_textureLabel);
         // The two radios live in different rows (containers), so WinForms would not group them.
-        _solid.CheckedChanged += (_, _) => { if (_solid.Checked) _textured.Checked = false; };
-        _textured.CheckedChanged += (_, _) => { if (_textured.Checked) _solid.Checked = false; };
+        _solid.CheckedChanged += (_, _) => { if (_solid.Checked) { _textured.Checked = false; SetUseTexture(false); } };
+        _textured.CheckedChanged += (_, _) => { if (_textured.Checked) { _solid.Checked = false; SetUseTexture(true); } };
+        ShowSelectedMaterial();
 
         // SURFACE
         flow.Controls.Add(Section("SURFACE DETAIL"));
         _normalMapOn = Check("Normal map", false, "N");
         flow.Controls.Add(Row(_normalMapOn, MiniButton("Load…", () => LoadImage(true))));
-        _normalMapLabel = FileLabel(_normalMapName);
+        _normalMapLabel = FileLabel(_normalMap?.Name ?? "(none)");
         flow.Controls.Add(_normalMapLabel);
 
         // LIGHT

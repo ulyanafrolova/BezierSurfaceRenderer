@@ -1,7 +1,7 @@
 using System.Drawing.Drawing2D;
-using T = BezierSurfaceRenderer.App.Theme.Theme;
+using T = BezierSurfaceRenderer.App.Theme;
 
-namespace BezierSurfaceRenderer.App.Controls;
+namespace BezierSurfaceRenderer.App;
 
 /// <summary>
 /// Owner-drawn slider in the app theme: caption on the left, monospace value readout on the right,

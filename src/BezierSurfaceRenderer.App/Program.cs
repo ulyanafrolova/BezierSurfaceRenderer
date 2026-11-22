@@ -1,5 +1,3 @@
-using BezierSurfaceRenderer.Core.Geometry;
-using BezierSurfaceRenderer.Core.SceneModel;
 
 namespace BezierSurfaceRenderer.App;
 

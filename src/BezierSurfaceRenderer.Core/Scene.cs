@@ -1,8 +1,6 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Geometry;
-using BezierSurfaceRenderer.Core.Mathematics;
 
-namespace BezierSurfaceRenderer.Core.SceneModel;
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
 /// Model state: surfaces, their meshes at the current density, and the accumulated orientation.

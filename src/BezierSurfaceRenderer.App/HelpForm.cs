@@ -1,5 +1,5 @@
 using System.Reflection;
-using T = BezierSurfaceRenderer.App.Theme.Theme;
+using T = BezierSurfaceRenderer.App.Theme;
 
 namespace BezierSurfaceRenderer.App;
 

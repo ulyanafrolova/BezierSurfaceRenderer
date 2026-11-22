@@ -1,5 +1,4 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Rendering;
 
 namespace BezierSurfaceRenderer.Core.Tests;
 
@@ -7,15 +6,12 @@ public class FillerTests
 {
     private const int W = 64, H = 48;
 
-    /// <summary>Counts how many times each pixel is written.</summary>
-    private struct CoverageSink(int[] counts) : ISpanSink
+    /// <summary>Span callback that counts how many times each pixel is written.</summary>
+    private static Action<int, int, int> Counter(int[] counts) => (y, xFrom, xTo) =>
     {
-        public void Span(int y, int xFrom, int xTo)
-        {
-            Assert.True(xFrom <= xTo);
-            for (int x = xFrom; x <= xTo; x++) counts[y * W + x]++;
-        }
-    }
+        Assert.True(xFrom <= xTo);
+        for (int x = xFrom; x <= xTo; x++) counts[y * W + x]++;
+    };
 
     private static int[] Fill(Vector2[] polygon) => FillAll([polygon]);
 
@@ -24,10 +20,7 @@ public class FillerTests
         var counts = new int[W * H];
         var filler = new EdgeTableFiller();
         foreach (var poly in polygons)
-        {
-            var sink = new CoverageSink(counts);
-            filler.Fill(poly, W, 0, H, ref sink);
-        }
+            filler.Fill(poly, W, 0, H, Counter(counts));
         return counts;
     }
 
@@ -87,8 +80,7 @@ public class FillerTests
     public void ClipsToBufferAndRowWindow()
     {
         var counts = new int[W * H];
-        var sink = new CoverageSink(counts);
-        new EdgeTableFiller().Fill([new(-100, -100), new(500, -100), new(500, 500), new(-100, 500)], W, 10, 20, ref sink);
+        new EdgeTableFiller().Fill([new(-100, -100), new(500, -100), new(500, 500), new(-100, 500)], W, 10, 20, Counter(counts));
         Assert.Equal(W * 10, counts.Sum());
         Assert.Equal(1, counts[10 * W]);
         Assert.Equal(0, counts[9 * W]);

@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace BezierSurfaceRenderer.Core.Mathematics;
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
 /// 3×3 matrix using the COLUMN-VECTOR convention from the assignment: P' = R · P,
@@ -97,6 +97,4 @@ public readonly struct Mat3
         return FromColumns(c1, c2, c3);
     }
 
-    public override string ToString() =>
-        $"[{M11:0.000} {M12:0.000} {M13:0.000}; {M21:0.000} {M22:0.000} {M23:0.000}; {M31:0.000} {M32:0.000} {M33:0.000}]";
 }

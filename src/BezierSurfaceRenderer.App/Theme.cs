@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace BezierSurfaceRenderer.App.Theme;
+namespace BezierSurfaceRenderer.App;
 
 /// <summary>Single source of truth for colours and fonts; every control reads from here.</summary>
 internal static class Theme

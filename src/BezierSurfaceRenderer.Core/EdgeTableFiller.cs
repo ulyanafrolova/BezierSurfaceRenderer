@@ -1,12 +1,6 @@
 using System.Numerics;
 
-namespace BezierSurfaceRenderer.Core.Rendering;
-
-/// <summary>Receives one horizontal run of pixels [xFrom, xTo] (inclusive) on scanline y.</summary>
-public interface ISpanSink
-{
-    void Span(int y, int xFrom, int xTo);
-}
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
 /// Polygon scan conversion with bucket-sorted edges (spec §4, surnames A–K):
@@ -17,7 +11,8 @@ public interface ISpanSink
 /// Sampling is at pixel centres (x + 0.5, y + 0.5) with half-open intervals [start, end) both vertically
 /// and horizontally — the classic top-left rule — so triangles sharing an edge leave no gaps and never
 /// draw a pixel twice. Output is clipped to columns [0, width) and rows [rowFrom, rowTo).
-/// Purely geometric: the caller shades each span. Instances hold scratch buffers, so use one per thread.
+/// Purely geometric: each horizontal run [xFrom, xTo] (inclusive) on row y is passed to <c>span(y, xFrom, xTo)</c>,
+/// which shades it. Instances hold scratch buffers, so use one per thread.
 /// </summary>
 public sealed class EdgeTableFiller
 {
@@ -33,8 +28,7 @@ public sealed class EdgeTableFiller
     private int[] _buckets = new int[64];
     private int[] _active = new int[8];
 
-    public void Fill<TSink>(ReadOnlySpan<Vector2> polygon, int width, int rowFrom, int rowTo, ref TSink sink)
-        where TSink : struct, ISpanSink
+    public void Fill(ReadOnlySpan<Vector2> polygon, int width, int rowFrom, int rowTo, Action<int, int, int> span)
     {
         int n = polygon.Length;
         if (n < 3 || rowFrom >= rowTo) return;
@@ -105,7 +99,7 @@ public sealed class EdgeTableFiller
             {
                 int xFrom = Math.Max(0, FirstCentre(_edges[_active[k]].X));
                 int xTo = Math.Min(width, FirstCentre(_edges[_active[k + 1]].X)) - 1;
-                if (xFrom <= xTo) sink.Span(y, xFrom, xTo);
+                if (xFrom <= xTo) span(y, xFrom, xTo);
             }
 
             for (int k = 0; k < activeCount; k++)

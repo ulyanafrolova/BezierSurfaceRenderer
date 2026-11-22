@@ -1,8 +1,4 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Geometry;
-using BezierSurfaceRenderer.Core.Mathematics;
-using BezierSurfaceRenderer.Core.Rendering;
-using BezierSurfaceRenderer.Core.SceneModel;
 using static BezierSurfaceRenderer.Core.Tests.TestUtil;
 
 namespace BezierSurfaceRenderer.Core.Tests;
@@ -13,16 +9,16 @@ public class ShadingTests
     public void LightStraightAboveGivesKdPlusKs()
     {
         // N = L = V = z ⇒ cos(N,L) = 1, R = z ⇒ cos(V,R) = 1.
-        var p = new LightingParameters(0.6f, 0.3f, 50, Vector3.One);
-        var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(0, 0, 10), new Vector3(0.5f, 1f, 0.2f), p);
+        var p = new RenderSettings(0.6f, 0.3f, 50, Vector3.One, new Vector3(0, 0, 10));
+        var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(0.5f, 1f, 0.2f), p);
         Near(new Vector3(0.45f, 0.9f, 0.18f), color);
     }
 
     [Fact]
     public void ChannelsAreIndependent()
     {
-        var p = new LightingParameters(1f, 0f, 1, new Vector3(1f, 0.5f, 0f));
-        var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.UnitZ, new Vector3(0.8f, 0.8f, 0.8f), p);
+        var p = new RenderSettings(1f, 0f, 1, new Vector3(1f, 0.5f, 0f), Vector3.UnitZ);
+        var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(0.8f, 0.8f, 0.8f), p);
         Near(new Vector3(0.8f, 0.4f, 0f), color);
     }
 
@@ -30,8 +26,8 @@ public class ShadingTests
     public void Light45DegreesMatchesHandComputation()
     {
         // L = (1,0,1)/√2: cosNL = √2/2; R = (−1,0,1)/√2 ⇒ cosVR = √2/2.
-        var p = new LightingParameters(0.5f, 0.5f, 2, Vector3.One);
-        var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(5, 0, 5), Vector3.One, p);
+        var p = new RenderSettings(0.5f, 0.5f, 2, Vector3.One, new Vector3(5, 0, 5));
+        var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.One, p);
         float expected = 0.5f * MathF.Sqrt(0.5f) + 0.5f * 0.5f;
         Near(new Vector3(expected), color);
     }
@@ -39,8 +35,8 @@ public class ShadingTests
     [Fact]
     public void NegativeCosinesClampToZero()
     {
-        var p = new LightingParameters(1f, 1f, 10, Vector3.One);
-        Near(Vector3.Zero, Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(0, 0, -3), Vector3.One, p));
+        var p = new RenderSettings(1f, 1f, 10, Vector3.One, new Vector3(0, 0, -3));
+        Near(Vector3.Zero, Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.One, p));
     }
 
     [Fact]
@@ -100,25 +96,40 @@ public class ShadingTests
         Assert.Equal(110f, fb.ToColumn(1));
     }
 
-    private static RenderSettings Settings(Vector3 light) =>
-        new(LightingParameters.Default, light, ObjectColorSource.SolidColor, Vector3.One, null, false, null);
+    private static RenderSettings Settings(Vector3 light) => new(0.5f, 0.5f, 20, Vector3.One, light);
 
     [Fact]
-    public void RendererFillsSceneAndParallelMatchesSequential()
+    public void RendererFillsScene()
     {
         var scene = new Scene(SurfaceFileParser.Load(SurfacesFile), 12);
         scene.Rotate(Mat3.RotationX(0.7f) * Mat3.RotationZ(0.3f));
-        var settings = Settings(new Vector3(0.5f, 0.5f, 3f));
+        var fb = new FrameBuffer(160, 120) { PixelsPerUnit = 30 };
+        fb.Clear(0);
+        SceneRenderer.RenderFilled(fb, scene.Meshes, Settings(new Vector3(0.5f, 0.5f, 3f)));
+        Assert.True(fb.Color.Count(c => c != 0) > 160 * 120 / 10);
+    }
 
-        var seq = new FrameBuffer(160, 120) { PixelsPerUnit = 30 };
-        var par = new FrameBuffer(160, 120) { PixelsPerUnit = 30 };
-        seq.Clear(0);
-        par.Clear(0);
-        new SceneRenderer { Parallel = false }.RenderFilled(seq, scene.Meshes, settings);
-        new SceneRenderer { Parallel = true }.RenderFilled(par, scene.Meshes, settings);
+    [Fact]
+    public void BackSideIsLitToo()
+    {
+        // Flip the scene upside down: the observer now sees the underside of the surfaces.
+        var scene = new Scene(SurfaceFileParser.Load(SurfacesFile).Take(1).ToList(), 8);
+        scene.Rotate(Mat3.RotationX(MathF.PI));
+        var fb = new FrameBuffer(101, 101) { PixelsPerUnit = 40 };
+        fb.Clear(0);
+        SceneRenderer.RenderFilled(fb, scene.Meshes, Settings(new Vector3(0, 0, 5)));
+        Assert.True((fb.Color[50 * 101 + 50] & 0xFF) > 100);
+    }
 
-        Assert.Equal(seq.Color, par.Color);
-        Assert.True(seq.Color.Count(c => c != 0) > 160 * 120 / 10);
+    [Fact]
+    public void ObjectColorIsChosenPerSurface()
+    {
+        var surfaces = SurfaceFileParser.Load(SurfacesFile);
+        surfaces[0].SolidColor = new Vector3(1, 0, 0);
+        surfaces[1].Texture = Texture.Solid(new Vector3(0, 0, 1));
+        surfaces[1].UseTexture = true;
+        Near(new Vector3(1, 0, 0), surfaces[0].ObjectColor(0.3f, 0.3f));
+        Near(new Vector3(0, 0, 1), surfaces[1].ObjectColor(0.3f, 0.3f));
     }
 
     [Fact]
@@ -128,7 +139,7 @@ public class ShadingTests
         var scene = new Scene(surfaces, 16);
         var fb = new FrameBuffer(101, 101) { PixelsPerUnit = 40 };
         fb.Clear(0);
-        new SceneRenderer().RenderFilled(fb, scene.Meshes, Settings(new Vector3(0, 0, 5)));
+        SceneRenderer.RenderFilled(fb, scene.Meshes, Settings(new Vector3(0, 0, 5)));
 
         // At the centre the dome (z ≈ 0.56) is above the saddle (z ≈ 0): depth holds the dome's z.
         float domeZ = surfaces[0].Evaluate(0.5f, 0.5f).P.Z;
@@ -145,9 +156,8 @@ public class ShadingTests
         var scene = new Scene(SurfaceFileParser.Load(SurfacesFile).Take(1).ToList(), 1);
         var fb = new FrameBuffer(101, 101) { PixelsPerUnit = 40 };
         fb.Clear(0);
-        var settings = new RenderSettings(new LightingParameters(0.2f, 0.8f, 30, Vector3.One),
-            new Vector3(0, 0, 4), ObjectColorSource.SolidColor, Vector3.One, null, false, null);
-        new SceneRenderer().RenderFilled(fb, scene.Meshes, settings);
+        var settings = new RenderSettings(0.2f, 0.8f, 30, Vector3.One, new Vector3(0, 0, 4));
+        SceneRenderer.RenderFilled(fb, scene.Meshes, settings);
 
         int best = Array.IndexOf(fb.Color, fb.Color.MaxBy(c => c & 0xFF));
         int row = best / 101, col = best % 101;

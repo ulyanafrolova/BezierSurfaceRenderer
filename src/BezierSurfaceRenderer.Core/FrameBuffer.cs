@@ -1,4 +1,4 @@
-namespace BezierSurfaceRenderer.Core.Rendering;
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
 /// Software colour + depth buffer. Pixels are 32-bit ARGB ints (in memory BGRA, i.e. GDI+

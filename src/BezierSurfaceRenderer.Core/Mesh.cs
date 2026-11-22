@@ -1,7 +1,6 @@
 using System.Numerics;
-using BezierSurfaceRenderer.Core.Mathematics;
 
-namespace BezierSurfaceRenderer.Core.Geometry;
+namespace BezierSurfaceRenderer.Core;
 
 /// <summary>Mesh vertex as in spec §3: data before rotation, after rotation, and its (u, v).</summary>
 public sealed class Vertex
