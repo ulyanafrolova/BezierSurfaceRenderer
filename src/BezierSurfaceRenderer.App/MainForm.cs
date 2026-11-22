@@ -278,7 +278,7 @@ public sealed class MainForm : Form
         _textured = new RadioButton { Text = "Texture", AutoSize = true };
         _textured.CheckedChanged += (_, _) => { SelectedSurface.UseTexture = _textured.Checked; _viewport.Invalidate(); };
         _objectColor = PanelButton("Color…", () => PickColor(false));
-        Add(_surfacePicker, _solid, _textured, _objectColor, PanelButton("Load texture…", () => LoadImage(false)));
+        Add(new Label { Text = "Surface to edit (S):", AutoSize = true }, _surfacePicker, _solid, _textured, _objectColor, PanelButton("Load texture…", () => LoadImage(false)));
         ShowSelectedMaterial();
 
         Add(Header("Normal map"));
