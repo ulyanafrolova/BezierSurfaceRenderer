@@ -226,11 +226,15 @@ public sealed class MainForm : Form
         var view = new ToolStripMenuItem("&View");
         view.DropDownItems.Add(Item("&Reset orientation", "R", ResetView));
 
+        var colors = new ToolStripMenuItem("&Colors");
+        colors.DropDownItems.Add(Item("&Light color (IL)…", "Ctrl+L", () => PickColor(true)));
+        colors.DropDownItems.Add(Item("&Object color (IO) of selected surface…", "Ctrl+K", () => PickColor(false)));
+
         var help = new ToolStripMenuItem("&Help");
         help.DropDownItems.Add(Item("&Documentation", "F1", ShowHelp));
 
         var menu = new MenuStrip();
-        menu.Items.AddRange([file, view, help]);
+        menu.Items.AddRange([file, view, colors, help]);
         MainMenuStrip = menu;
         return menu;
 

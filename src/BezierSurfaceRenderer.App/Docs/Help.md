@@ -52,14 +52,14 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 - **kd**, **ks** (0–1) oraz **m** (1–100) — współczynniki modelu oświetlenia, jednakowe dla wszystkich trójkątów.
 
 ### Object color (kolor obiektu IO)
-- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy (lub klawiszem S), a potem **jednolity kolor** (przycisk „Color…”, który pokazuje bieżący kolor) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
+- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy (lub klawiszem S), a potem **jednolity kolor** (menu **Colors → Object color** lub przycisk „Color…”, który pokazuje bieżący kolor) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
 
 ### Normal map (mapa wektorów normalnych)
 - **Normal map** — modyfikacja wektora normalnego na podstawie wczytanej mapy wektorów normalnych (domyślnie: cegły; w katalogu `Assets/normalmaps` jest też mapa ze sferą).
 
 ### Light (światło)
 - **Light z** — współrzędna z płaszczyzny, w której porusza się światło.
-- **Light color…** — kolor światła IL, domyślnie biały (kolor przycisku pokazuje bieżący kolor).
+- **Light color…** (także menu **Colors → Light color**) — kolor światła IL, domyślnie biały (kolor przycisku pokazuje bieżący kolor).
 - **Animate light** — światło porusza się po zamkniętej krzywej Béziera; odznaczenie pola (lub Spacja) zatrzymuje animację.
 - **Edit light path** — pokazuje wielobok kontrolny krzywej (punkty V0 … V7; większy kwadrat to V0 = V8). Każdy punkt można przeciągnąć myszą. Żółty punkt na krzywej to aktualne położenie źródła światła.
 
