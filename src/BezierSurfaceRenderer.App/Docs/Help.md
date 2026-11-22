@@ -16,7 +16,6 @@ Program wyświetla powierzchnie Béziera trzeciego stopnia wczytane z pliku teks
 | Przeciąganie przy krawędzi / poza kulą | Obrót wokół osi patrzenia (oś z) |
 | Shift + lewy przycisk lub prawy przycisk | Wyłącznie obrót wokół osi patrzenia |
 | Przeciąganie punktu krzywej światła | Przesuwa punkt kontrolny (tylko w trybie „Edit light path”) |
-| Kółko myszy nad suwakiem | Zmienia wartość suwaka o jeden krok |
 
 Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dowolnie wiele razy w dowolnym kierunku.
 
@@ -39,28 +38,30 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 | Ctrl+N | Wczytuje mapę wektorów normalnych |
 | Ctrl+L | Wybór koloru światła IL |
 | Ctrl+K | Wybór jednolitego koloru obiektu IO wybranej powierzchni |
-| Strzałki, PgUp/PgDn, Home/End | Zmiana wartości aktywnego suwaka |
+| Strzałki, PgUp/PgDn, Home/End, kółko myszy | Zmiana wartości aktywnego suwaka |
 
 ## 4. Panel sterowania
 
 ### Geometry (geometria)
 - **Triangulation** — liczba komórek siatki (u, v) na bok, od 1 do 64. Każda komórka jest dzielona na dwa trójkąty, więc jedna powierzchnia ma 2·n² trójkątów.
-- **Bézier control net** — wielobok Béziera (siatka 4×4 punktów kontrolnych) każdej powierzchni (kolor bursztynowy).
+- **Bézier control net** — wielobok Béziera (siatka 4×4 punktów kontrolnych) każdej powierzchni (kolor pomarańczowy).
 - **Triangle mesh** — krawędzie trójkątów (kolor cyjanowy).
 - **Filled triangles** — wypełnione, oświetlone trójkąty z buforem głębokości.
 
 ### Material (materiał)
 - **kd**, **ks** (0–1) oraz **m** (1–100) — współczynniki modelu oświetlenia, jednakowe dla wszystkich trójkątów.
-- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy (lub klawiszem S), a potem **jednolity kolor** (próbka koloru lub menu Colors) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load…”.
 
-### Surface detail (szczegóły powierzchni)
+### Object color (kolor obiektu IO)
+- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy (lub klawiszem S), a potem **jednolity kolor** (przycisk „Color…”, który pokazuje bieżący kolor) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
+
+### Normal map (mapa wektorów normalnych)
 - **Normal map** — modyfikacja wektora normalnego na podstawie wczytanej mapy wektorów normalnych (domyślnie: cegły; w katalogu `Assets/normalmaps` jest też mapa ze sferą).
 
 ### Light (światło)
 - **Light z** — współrzędna z płaszczyzny, w której porusza się światło.
-- **Light color IL** — kolor światła, domyślnie biały.
+- **Light color…** — kolor światła IL, domyślnie biały (kolor przycisku pokazuje bieżący kolor).
 - **Animate light** — światło porusza się po zamkniętej krzywej Béziera; odznaczenie pola (lub Spacja) zatrzymuje animację.
-- **Edit light path** — pokazuje wielobok kontrolny krzywej (punkty V0 … V7; większy kwadrat to V0 = V8). Każdy punkt można przeciągnąć myszą. Jasny punkt na krzywej to aktualne położenie źródła światła.
+- **Edit light path** — pokazuje wielobok kontrolny krzywej (punkty V0 … V7; większy kwadrat to V0 = V8). Każdy punkt można przeciągnąć myszą. Żółty punkt na krzywej to aktualne położenie źródła światła.
 
 ## 5. Format pliku wejściowego
 

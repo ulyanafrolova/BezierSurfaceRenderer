@@ -1,27 +1,17 @@
 using System.Diagnostics;
 using System.Numerics;
-using T = BezierSurfaceRenderer.App.Theme;
 
 namespace BezierSurfaceRenderer.App;
 
 /// <summary>
-/// Layout (built in code, no designer file):
-///   MenuStrip   File (Load texture, Load normal map, Exit) · View (Reset orientation) ·
-///               Colors (Light color, Object color) · Help (Documentation)
-///   Left        ViewportControl (fills)
-///   Right       control panel, grouped:
-///     GEOMETRY  slider "Triangulation" · checkboxes Bézier control net / Triangle mesh / Filled triangles
-///     MATERIAL  sliders kd, ks, m · surface picker · radios Solid color / Texture (per surface)
-///     SURFACE   checkbox Normal map
-///     LIGHT     slider Light z · checkboxes Animate / Edit light path
-/// Owns the render loop timer (≈60 Hz while the light animates; on-demand redraw otherwise).
-/// Keyboard shortcuts are handled in ProcessCmdKey so they work regardless of focused control.
+/// Main window (built in code, no designer file): menu on top, ViewportControl on the left and a
+/// panel of standard WinForms controls on the right (one top-down list). Owns the animation timer.
+/// Keyboard shortcuts are handled in ProcessCmdKey so they work regardless of the focused control.
 /// </summary>
 public sealed class MainForm : Form
 {
-    private const int PanelWidth = 300;
-    private const int ContentWidth = PanelWidth - 2 * 16 - SystemScrollAllowance;
-    private const int SystemScrollAllowance = 18;
+    private const int PanelWidth = 260;
+    private const int ContentWidth = PanelWidth - 40; // leaves room for the panel's vertical scroll bar
 
     private const float LightPathRadius = 2.0f;
 
@@ -38,13 +28,12 @@ public sealed class MainForm : Form
     private Color _lightColor = Color.White;
 
     // Controls
-    private LabeledSlider _divisions = null!, _kd = null!, _ks = null!, _m = null!, _lightZ = null!;
+    private TrackBar _divisions = null!, _kd = null!, _ks = null!, _m = null!, _lightZ = null!;
     private CheckBox _showNet = null!, _showMesh = null!, _showFill = null!;
     private ComboBox _surfacePicker = null!;
     private RadioButton _solid = null!, _textured = null!;
     private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!;
-    private Panel _lightSwatch = null!, _objectSwatch = null!;
-    private Label _textureLabel = null!, _normalMapLabel = null!;
+    private Button _objectColor = null!, _lightColorButton = null!;
 
     public MainForm(Scene scene)
     {
@@ -54,12 +43,12 @@ public sealed class MainForm : Form
         SuspendLayout();
         AutoScaleDimensions = new SizeF(96f, 96f); // layout is authored at 100 %; scale for higher DPI
         AutoScaleMode = AutoScaleMode.Dpi;
+        Font = new Font("Segoe UI", 9f);
         Text = "Bézier Surface Renderer";
-        MinimumSize = new Size(900, 640);
-        Size = new Size(1360, 880);
+        MinimumSize = new Size(800, 600);
+        Size = new Size(1200, 800);
         StartPosition = FormStartPosition.CenterScreen;
         KeyPreview = true;
-        T.Apply(this);
 
         LoadDefaultAssets();
 
@@ -81,7 +70,7 @@ public sealed class MainForm : Form
     // ---------------------------------------------------------------- settings
 
     private RenderSettings CurrentSettings() => new(
-        _kd.Value, _ks.Value, (int)_m.Value, ToVector(_lightColor), _light.Position,
+        _kd.Value / 100f, _ks.Value / 100f, _m.Value, ToVector(_lightColor), _light.Position,
         _normalMapOn.Checked ? _normalMap : null);
 
     private static Vector3 ToVector(Color c) => new Vector3(c.R, c.G, c.B) / 255f;
@@ -96,14 +85,8 @@ public sealed class MainForm : Form
         var surface = SelectedSurface;
         _solid.Checked = !surface.UseTexture;
         _textured.Checked = surface.UseTexture;
-        _objectSwatch.BackColor = ToColor(surface.SolidColor);
-        _textureLabel.Text = surface.Texture?.Name ?? "(none)";
-    }
-
-    private void SetUseTexture(bool useTexture)
-    {
-        SelectedSurface.UseTexture = useTexture;
-        _viewport.Invalidate();
+        _textured.Text = $"Texture ({surface.Texture?.Name ?? "none"})";
+        _objectColor.BackColor = ToColor(surface.SolidColor);
     }
 
     private void OnTick(object? sender, EventArgs e)
@@ -167,7 +150,7 @@ public sealed class MainForm : Form
         if (isNormalMap)
         {
             _normalMap = texture;
-            _normalMapLabel.Text = texture.Name;
+            _normalMapOn.Text = $"Normal map ({texture.Name})";
             _normalMapOn.Checked = true;
         }
         else
@@ -183,7 +166,7 @@ public sealed class MainForm : Form
     {
         using var dialog = new ColorDialog { FullOpen = true, Color = light ? _lightColor : ToColor(SelectedSurface.SolidColor) };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        if (light) { _lightColor = dialog.Color; _lightSwatch.BackColor = dialog.Color; }
+        if (light) { _lightColor = dialog.Color; _lightColorButton.BackColor = dialog.Color; }
         else
         {
             SelectedSurface.SolidColor = ToVector(dialog.Color);
@@ -221,8 +204,8 @@ public sealed class MainForm : Form
             case Keys.T: (_textured.Checked ? _solid : _textured).Checked = true; return true;
             case Keys.S: _surfacePicker.SelectedIndex = (_surfacePicker.SelectedIndex + 1) % _surfacePicker.Items.Count; return true;
             case Keys.N: _normalMapOn.Checked = !_normalMapOn.Checked; return true;
-            case Keys.OemOpenBrackets: _divisions.Value -= 1; return true;
-            case Keys.OemCloseBrackets: _divisions.Value += 1; return true;
+            case Keys.OemOpenBrackets: _divisions.Value = Math.Max(_divisions.Minimum, _divisions.Value - 1); return true;
+            case Keys.OemCloseBrackets: _divisions.Value = Math.Min(_divisions.Maximum, _divisions.Value + 1); return true;
             case Keys.Control | Keys.T: LoadImage(isNormalMap: false); return true;
             case Keys.Control | Keys.N: LoadImage(isNormalMap: true); return true;
             case Keys.Control | Keys.L: PickColor(light: true); return true;
@@ -235,8 +218,6 @@ public sealed class MainForm : Form
 
     private MenuStrip BuildMenu()
     {
-        var menu = new MenuStrip { Dock = DockStyle.Top, Padding = new Padding(8, 4, 0, 4) };
-
         var file = new ToolStripMenuItem("&File");
         file.DropDownItems.Add(Item("Load &texture…", "Ctrl+T", () => LoadImage(false)));
         file.DropDownItems.Add(Item("Load &normal map…", "Ctrl+N", () => LoadImage(true)));
@@ -246,15 +227,11 @@ public sealed class MainForm : Form
         var view = new ToolStripMenuItem("&View");
         view.DropDownItems.Add(Item("&Reset orientation", "R", ResetView));
 
-        var colors = new ToolStripMenuItem("&Colors");
-        colors.DropDownItems.Add(Item("&Light color (IL)…", "Ctrl+L", () => PickColor(true)));
-        colors.DropDownItems.Add(Item("&Object color (IO) of selected surface…", "Ctrl+K", () => PickColor(false)));
-
         var help = new ToolStripMenuItem("&Help");
         help.DropDownItems.Add(Item("&Documentation", "F1", ShowHelp));
 
-        menu.Items.AddRange([file, view, colors, help]);
-        T.Apply(menu);
+        var menu = new MenuStrip();
+        menu.Items.AddRange([file, view, help]);
         MainMenuStrip = menu;
         return menu;
 
@@ -269,186 +246,90 @@ public sealed class MainForm : Form
 
     private Control BuildPanel()
     {
-        var host = new Panel { Dock = DockStyle.Right, Width = PanelWidth, BackColor = T.Panel };
-        host.Paint += (_, e) =>
+        var panel = new FlowLayoutPanel
         {
-            using var pen = new Pen(T.Border);
-            e.Graphics.DrawLine(pen, 0, 0, 0, host.Height);
+            Dock = DockStyle.Right, Width = PanelWidth, FlowDirection = FlowDirection.TopDown,
+            WrapContents = false, AutoScroll = true, Padding = new Padding(10),
         };
+        void Add(params Control[] controls) => panel.Controls.AddRange(controls);
 
-        var flow = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.TopDown,
-            WrapContents = false,
-            AutoScroll = true,
-            Padding = new Padding(16, 12, 16, 16),
-            BackColor = T.Panel,
-        };
-        host.Controls.Add(flow);
+        // Geometry
+        Add(Header("Geometry"));
+        _divisions = Slider(panel, "Triangulation", 1, 64, 16, v => v.ToString());
+        _divisions.ValueChanged += (_, _) => { _scene.SetDivisions(_divisions.Value); _viewport.Invalidate(); };
+        _scene.SetDivisions(_divisions.Value);
+        _showNet = Check("Bézier control net", false);
+        _showMesh = Check("Triangle mesh", true);
+        _showFill = Check("Filled triangles", true);
+        Add(_showNet, _showMesh, _showFill);
 
-        flow.Controls.Add(new Label
-        {
-            Text = "BÉZIER / RENDER", Font = T.Title, ForeColor = T.Text, AutoSize = true,
-            Margin = new Padding(0, 0, 0, 2),
-        });
-        flow.Controls.Add(new Label
-        {
-            Text = "drag to rotate · F1 for help", Font = T.MonoSmall, ForeColor = T.TextMuted, AutoSize = true,
-            Margin = new Padding(1, 0, 0, 6),
-        });
-
-        // GEOMETRY
-        flow.Controls.Add(Section("GEOMETRY"));
-        _divisions = Slider("Triangulation (cells per side)", 1, 64, 1, "0", 16);
-        _divisions.ValueChanged += (_, _) => { _scene.SetDivisions((int)_divisions.Value); _viewport.Invalidate(); };
-        _scene.SetDivisions((int)_divisions.Value);
-        flow.Controls.Add(_divisions);
-        _showNet = Check("Bézier control net", false, "1");
-        _showMesh = Check("Triangle mesh", true, "2");
-        _showFill = Check("Filled triangles", true, "3");
-        flow.Controls.AddRange([_showNet, _showMesh, _showFill]);
-
-        // MATERIAL
-        flow.Controls.Add(Section("MATERIAL"));
-        _kd = Slider("kd · diffuse", 0, 1, 0.01f, "0.00", 0.5f);
-        _ks = Slider("ks · specular", 0, 1, 0.01f, "0.00", 0.5f);
-        _m = Slider("m · shininess", 1, 100, 1, "0", 20);
-        flow.Controls.AddRange([_kd, _ks, _m]);
+        // Lighting coefficients
+        Add(Header("Material"));
+        _kd = Slider(panel, "kd", 0, 100, 50, v => (v / 100f).ToString("0.00"));
+        _ks = Slider(panel, "ks", 0, 100, 50, v => (v / 100f).ToString("0.00"));
+        _m = Slider(panel, "m", 1, 100, 20, v => v.ToString());
         foreach (var s in new[] { _kd, _ks, _m }) s.ValueChanged += (_, _) => _viewport.Invalidate();
 
-        flow.Controls.Add(Caption("Object color IO of surface   [S]"));
-        _surfacePicker = new ComboBox
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList, Width = ContentWidth - 6, FlatStyle = FlatStyle.Flat,
-            BackColor = T.PanelRaised, ForeColor = T.Text, Margin = new Padding(3, 2, 0, 4),
-        };
+        // Object colour IO, chosen per surface. Both radios sit directly in the panel, so WinForms groups them.
+        Add(Header("Object color"));
+        _surfacePicker = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = ContentWidth };
         for (int k = 0; k < _scene.Surfaces.Count; k++) _surfacePicker.Items.Add($"Surface {k + 1}");
         _surfacePicker.SelectedIndex = 0;
         _surfacePicker.SelectedIndexChanged += (_, _) => ShowSelectedMaterial();
-        flow.Controls.Add(_surfacePicker);
-
-        _solid = Radio("Solid color", true);
-        _objectSwatch = Swatch(Color.White, () => PickColor(false));
-        flow.Controls.Add(Row(_solid, _objectSwatch));
-        _textured = Radio("Texture", false);
-        _textureLabel = FileLabel("(none)");
-        flow.Controls.Add(Row(_textured, MiniButton("Load…", () => LoadImage(false))));
-        flow.Controls.Add(_textureLabel);
-        // The two radios live in different rows (containers), so WinForms would not group them.
-        _solid.CheckedChanged += (_, _) => { if (_solid.Checked) { _textured.Checked = false; SetUseTexture(false); } };
-        _textured.CheckedChanged += (_, _) => { if (_textured.Checked) { _solid.Checked = false; SetUseTexture(true); } };
+        _solid = new RadioButton { Text = "Solid color", AutoSize = true };
+        _textured = new RadioButton { Text = "Texture", AutoSize = true };
+        _textured.CheckedChanged += (_, _) => { SelectedSurface.UseTexture = _textured.Checked; _viewport.Invalidate(); };
+        _objectColor = PanelButton("Color…", () => PickColor(false));
+        Add(_surfacePicker, _solid, _textured, _objectColor, PanelButton("Load texture…", () => LoadImage(false)));
         ShowSelectedMaterial();
 
-        // SURFACE
-        flow.Controls.Add(Section("SURFACE DETAIL"));
-        _normalMapOn = Check("Normal map", false, "N");
-        flow.Controls.Add(Row(_normalMapOn, MiniButton("Load…", () => LoadImage(true))));
-        _normalMapLabel = FileLabel(_normalMap?.Name ?? "(none)");
-        flow.Controls.Add(_normalMapLabel);
+        Add(Header("Normal map"));
+        _normalMapOn = Check($"Normal map ({_normalMap?.Name ?? "none"})", false);
+        Add(_normalMapOn, PanelButton("Load normal map…", () => LoadImage(true)));
 
-        // LIGHT
-        flow.Controls.Add(Section("LIGHT"));
-        _lightZ = Slider("Light z (plane of the path)", -2, 6, 0.05f, "0.00", _light.Z);
-        _lightZ.ValueChanged += (_, _) => { _light.Z = _lightZ.Value; _viewport.Invalidate(); };
-        flow.Controls.Add(_lightZ);
-        flow.Controls.Add(Caption("Light color IL"));
-        _lightSwatch = Swatch(_lightColor, () => PickColor(true));
-        flow.Controls.Add(Row(MiniButton("Choose…", () => PickColor(true)), _lightSwatch));
-        _animate = Check("Animate light", true, "Space");
-        _editPath = Check("Edit light path", false, "E");
-        flow.Controls.AddRange([_animate, _editPath]);
+        Add(Header("Light"));
+        _lightZ = Slider(panel, "Light z", -40, 120, (int)MathF.Round(_light.Z * 20), v => (v / 20f).ToString("0.00"));
+        _lightZ.ValueChanged += (_, _) => { _light.Z = _lightZ.Value / 20f; _viewport.Invalidate(); };
+        _lightColorButton = PanelButton("Light color…", () => PickColor(true));
+        _lightColorButton.BackColor = _lightColor;
+        _animate = Check("Animate light", true);
+        _editPath = Check("Edit light path", false);
+        Add(_lightColorButton, _animate, _editPath);
 
-        return host;
+        return panel;
     }
 
-    private static Label Section(string text) => new()
+    private static Label Header(string text) => new()
     {
-        Text = text,
-        Font = T.Section,
-        ForeColor = T.Accent,
-        AutoSize = false,
-        Width = ContentWidth,
-        Height = 26,
-        TextAlign = ContentAlignment.BottomLeft,
-        Margin = new Padding(0, 14, 0, 4),
+        Text = text, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold), Margin = new Padding(0, 10, 0, 2),
     };
 
-    private static Label Caption(string text) => new()
+    /// <summary>Adds "caption: value" label + TrackBar; the label follows the value.</summary>
+    private static TrackBar Slider(Control parent, string caption, int min, int max, int value, Func<int, string> format)
     {
-        Text = text, ForeColor = T.TextMuted, AutoSize = true, Margin = new Padding(3, 6, 0, 2),
-    };
-
-    private static Label FileLabel(string text) => new()
-    {
-        Text = text, Font = T.MonoSmall, ForeColor = T.TextMuted, AutoSize = false, Width = ContentWidth,
-        Height = 16, AutoEllipsis = true, Margin = new Padding(22, 0, 0, 2),
-    };
-
-    private static LabeledSlider Slider(string caption, float min, float max, float step, string format, float value) => new()
-    {
-        Caption = caption, Minimum = min, Maximum = max, Step = step, Format = format, Value = value,
-        Width = ContentWidth, Margin = new Padding(0, 2, 0, 2),
-    };
-
-    private CheckBox Check(string text, bool value, string shortcut)
-    {
-        var box = new CheckBox
+        var label = new Label { AutoSize = true, Text = $"{caption}: {format(value)}" };
+        var bar = new TrackBar
         {
-            Text = $"{text}   [{shortcut}]", Checked = value, AutoSize = true, ForeColor = T.Text,
-            FlatStyle = FlatStyle.Flat, Margin = new Padding(3, 3, 0, 3), Cursor = Cursors.Hand,
+            Minimum = min, Maximum = max, Value = value, Width = ContentWidth,
+            TickStyle = TickStyle.None, AutoSize = false, Height = 30,
         };
-        box.FlatAppearance.BorderColor = T.TextMuted;
-        box.FlatAppearance.CheckedBackColor = T.Border;
+        bar.ValueChanged += (_, _) => label.Text = $"{caption}: {format(bar.Value)}";
+        parent.Controls.Add(label);
+        parent.Controls.Add(bar);
+        return bar;
+    }
+
+    private CheckBox Check(string text, bool value)
+    {
+        var box = new CheckBox { Text = text, Checked = value, AutoSize = true };
         box.CheckedChanged += (_, _) => SyncViewFlags();
         return box;
     }
 
-    private RadioButton Radio(string text, bool value)
+    private static Button PanelButton(string text, Action action)
     {
-        var radio = new RadioButton
-        {
-            Text = text, Checked = value, AutoSize = true, ForeColor = T.Text, FlatStyle = FlatStyle.Flat,
-            Margin = new Padding(3, 3, 0, 3), Cursor = Cursors.Hand,
-        };
-        radio.FlatAppearance.BorderColor = T.TextMuted;
-        radio.FlatAppearance.CheckedBackColor = T.Border;
-        radio.CheckedChanged += (_, _) => _viewport.Invalidate();
-        return radio;
-    }
-
-    private static Button MiniButton(string text, Action action)
-    {
-        var button = new Button
-        {
-            Text = text, AutoSize = true, FlatStyle = FlatStyle.Flat, BackColor = T.PanelRaised,
-            ForeColor = T.Text, Cursor = Cursors.Hand, Margin = new Padding(6, 0, 0, 0),
-        };
-        button.FlatAppearance.BorderColor = T.Border;
-        button.FlatAppearance.MouseOverBackColor = T.Border;
+        var button = new Button { Text = text, Width = ContentWidth, AutoSize = true };
         button.Click += (_, _) => action();
         return button;
-    }
-
-    private static Panel Swatch(Color color, Action onClick)
-    {
-        var swatch = new Panel
-        {
-            BackColor = color, Size = new Size(36, 20), Cursor = Cursors.Hand,
-            BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(8, 4, 0, 0),
-        };
-        swatch.Click += (_, _) => onClick();
-        return swatch;
-    }
-
-    private static FlowLayoutPanel Row(params Control[] controls)
-    {
-        var row = new FlowLayoutPanel
-        {
-            FlowDirection = FlowDirection.LeftToRight, WrapContents = false, AutoSize = true,
-            Margin = new Padding(0), Padding = new Padding(0), BackColor = T.Panel,
-        };
-        row.Controls.AddRange(controls);
-        return row;
     }
 }

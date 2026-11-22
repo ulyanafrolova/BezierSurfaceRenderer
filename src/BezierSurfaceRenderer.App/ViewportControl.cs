@@ -1,7 +1,6 @@
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Numerics;
-using T = BezierSurfaceRenderer.App.Theme;
 
 namespace BezierSurfaceRenderer.App;
 
@@ -19,6 +18,11 @@ public sealed class ViewportControl : Control
 {
     private enum DragMode { None, Trackball, Roll, LightPoint }
 
+    private static readonly Color Background = Color.FromArgb(24, 24, 28);
+    private static readonly Color MeshColor = Color.FromArgb(0, 200, 230);
+    private static readonly Color NetColor = Color.Orange;
+    private static readonly Color PathColor = Color.MediumPurple;
+
     private const float FitMargin = 1.05f;
     private const float HandleHitPixels = 9f;
 
@@ -33,7 +37,7 @@ public sealed class ViewportControl : Control
     {
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
                  ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
-        BackColor = T.Background;
+        BackColor = Background;
         TabStop = true;
     }
 
@@ -155,7 +159,7 @@ public sealed class ViewportControl : Control
     {
         var g = e.Graphics;
         int w = ClientSize.Width, h = ClientSize.Height;
-        g.Clear(T.Background);
+        g.Clear(Background);
         if (Scene == null || w <= 0 || h <= 0) return;
 
         var settings = SettingsSource?.Invoke();
@@ -164,7 +168,7 @@ public sealed class ViewportControl : Control
         {
             EnsureBuffers(w, h);
             _frame!.PixelsPerUnit = PixelsPerUnit;
-            _frame.Clear(T.Background.ToArgb());
+            _frame.Clear(Background.ToArgb());
             SceneRenderer.RenderFilled(_frame, Scene.Meshes, settings);
             BitmapInterop.CopyToBitmap(_frame, _bitmap!);
             // 1:1 copy; explicit size so GDI+ never rescales by the bitmap's DPI.
@@ -207,14 +211,14 @@ public sealed class ViewportControl : Control
             tri[2] = ToOverlay(t.C.Rotated.P);
             path.AddPolygon(tri);
         }
-        using var pen = new Pen(Color.FromArgb(ShowFilled ? 110 : 190, T.Accent), 1f);
+        using var pen = new Pen(Color.FromArgb(ShowFilled ? 110 : 190, MeshColor), 1f);
         g.DrawPath(pen, path);
     }
 
     private void DrawControlNets(Graphics g)
     {
-        using var pen = new Pen(T.ControlNet, 1.5f);
-        using var dot = new SolidBrush(T.ControlNet);
+        using var pen = new Pen(NetColor, 1.5f);
+        using var dot = new SolidBrush(NetColor);
         var line = new PointF[4];
         foreach (var surface in Scene!.Surfaces)
         {
@@ -241,7 +245,7 @@ public sealed class ViewportControl : Control
         const int samples = 240;
         var pts = new PointF[samples + 1];
         for (int k = 0; k <= samples; k++) pts[k] = ToOverlay(light.Evaluate((float)k / samples));
-        using (var pen = new Pen(Color.FromArgb(EditLightPath ? 230 : 150, T.AccentAlt), EditLightPath ? 2f : 1.5f))
+        using (var pen = new Pen(Color.FromArgb(EditLightPath ? 230 : 150, PathColor), EditLightPath ? 2f : 1.5f))
         {
             if (!EditLightPath) pen.DashPattern = [4f, 3f];
             g.DrawLines(pen, pts);
@@ -250,9 +254,9 @@ public sealed class ViewportControl : Control
         if (EditLightPath)
         {
             // Control polygon V0 … V(n−1) closed back to V0 (= Vn); V0 drawn larger.
-            using var polygonPen = new Pen(Color.FromArgb(150, T.AccentAlt), 1f);
-            using var pointBrush = new SolidBrush(T.AccentAlt);
-            using var hoverPen = new Pen(T.Text, 2f);
+            using var polygonPen = new Pen(Color.FromArgb(150, PathColor), 1f);
+            using var pointBrush = new SolidBrush(PathColor);
+            using var hoverPen = new Pen(Color.White, 2f);
             g.DrawPolygon(polygonPen, light.Points.Select(p => ToOverlay(p)).ToArray());
             for (int k = 0; k < light.Points.Count; k++)
             {
@@ -263,15 +267,8 @@ public sealed class ViewportControl : Control
             }
         }
 
-        // Current light position on the curve: soft glow + core.
+        // Current light position on the curve.
         var c = ToOverlay(light.Position);
-        for (int ring = 4; ring >= 1; ring--)
-        {
-            float r = 4 + ring * 4;
-            using var glow = new SolidBrush(Color.FromArgb(22 * (5 - ring), T.LightMarker));
-            g.FillEllipse(glow, c.X - r, c.Y - r, 2 * r, 2 * r);
-        }
-        using var core = new SolidBrush(T.LightMarker);
-        g.FillEllipse(core, c.X - 5, c.Y - 5, 10, 10);
+        g.FillEllipse(Brushes.Yellow, c.X - 6, c.Y - 6, 12, 12);
     }
 }
