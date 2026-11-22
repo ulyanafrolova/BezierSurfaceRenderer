@@ -96,6 +96,15 @@ public class ShadingTests
         Assert.Equal(110f, fb.ToColumn(1));
     }
 
+    [Fact]
+    public void NoHighlightWhenLightIsBehindTheSurface()
+    {
+        // Normal tilted slightly from the viewer, light straight below: R points almost at V, but no light reaches.
+        var n = Vector3.Normalize(new Vector3(1f, 0f, 0.2f));
+        var p = new RenderSettings(0f, 1f, 1, Vector3.One, new Vector3(0, 0, -10));
+        Assert.Equal(Vector3.Zero, Lighting.Shade(n, Vector3.Zero, Vector3.One, p));
+    }
+
     private static RenderSettings Settings(Vector3 light) => new(0.5f, 0.5f, 20, Vector3.One, light);
 
     [Fact]
