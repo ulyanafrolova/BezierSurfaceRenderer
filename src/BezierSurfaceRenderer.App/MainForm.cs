@@ -258,9 +258,8 @@ public sealed class MainForm : Form
 
         // Geometry
         Add(Header("Geometry"));
-        _divisions = Slider(panel, "Triangulation", 1, 64, 16, v => v.ToString());
+        _divisions = Slider(panel, "Triangulation", 1, 64, _scene.Divisions, v => v.ToString());
         _divisions.ValueChanged += (_, _) => { _scene.SetDivisions(_divisions.Value); _viewport.Invalidate(); };
-        _scene.SetDivisions(_divisions.Value);
         _showNet = Check("Bézier control net", false);
         _showMesh = Check("Triangle mesh", true);
         _showFill = Check("Filled triangles", true);
@@ -304,9 +303,11 @@ public sealed class MainForm : Form
         return panel;
     }
 
+    private static readonly Font HeaderFont = new("Segoe UI", 9f, FontStyle.Bold);
+
     private static Label Header(string text) => new()
     {
-        Text = text, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold), Margin = new Padding(0, 10, 0, 2),
+        Text = text, AutoSize = true, Font = HeaderFont, Margin = new Padding(0, 10, 0, 2),
     };
 
     /// <summary>Adds "caption: value" label + TrackBar; the label follows the value.</summary>
