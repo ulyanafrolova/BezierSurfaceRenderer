@@ -62,8 +62,6 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 - **Animate light** — światło porusza się po zamkniętej krzywej Béziera; odznaczenie pola (lub Spacja) zatrzymuje animację.
 - **Edit light path** — pokazuje wielobok kontrolny krzywej (punkty V0 … V7; większy kwadrat to V0 = V8). Każdy punkt można przeciągnąć myszą. Jasny punkt na krzywej to aktualne położenie źródła światła.
 
-W lewym górnym rogu obszaru rysowania wyświetlane są: czas generowania klatki, liczba trójkątów, położenie światła i stan animacji. Wskaźnik w lewym dolnym rogu pokazuje aktualne kierunki osi x (czerwona), y (zielona) i z (niebieska).
-
 ## 5. Format pliku wejściowego
 
 Każda powierzchnia to 16 kolejnych wierszy `x y z` (liczby rzeczywiste, kropka jako separator dziesiętny) w kolejności V00, V01, V02, V03, V10, …, V33: wiersz k zawiera punkt V(i, j), gdzie i = k / 4 (odpowiada parametrowi u), a j = k mod 4 (odpowiada parametrowi v). Kolejne powierzchnie występują po sobie w grupach po 16 wierszy; wymagane są co najmniej dwie. Puste wiersze są pomijane. Dołączony plik zawiera „kopułę” i falujące „siodło”; obie powierzchnie są funkcjami względem płaszczyzny xy, a ich punkty kontrolne wypełniają sześcian [−1, 1]³ o środku w punkcie (0, 0, 0).

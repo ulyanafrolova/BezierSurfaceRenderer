@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Numerics;
@@ -11,7 +10,6 @@ namespace BezierSurfaceRenderer.App;
 ///   1. SceneRenderer fills the FrameBuffer (if "Filled" is on) → copied into a Bitmap via LockBits.
 ///   2. Overlays with GDI+ using the spec's transform (ScaleTransform(1,−1) + TranslateTransform(W/2, −H/2)),
 ///      so the origin is at the centre, y up: wireframe, Bézier control nets, light path + light marker.
-///   3. HUD and orientation gizmo in plain screen coordinates.
 /// Mouse: left drag → Arcball.TrackballIncrement; Shift+left or right drag → Arcball.RollIncrement;
 /// in "edit light path" mode left drag moves curve control points instead (rotation disabled).
 /// Pixel scale = 0.5·min(W,H) / (1.05·r), r = radius of the sphere around all control points; by the
@@ -24,15 +22,12 @@ public sealed class ViewportControl : Control
     private const float FitMargin = 1.05f;
     private const float HandleHitPixels = 9f;
 
-    private readonly Stopwatch _frameClock = new();
-
     private FrameBuffer? _frame;
     private Bitmap? _bitmap;
     private DragMode _drag;
     private Point _lastMouse;
     private int _dragPoint = -1;
     private int _hoverPoint = -1;
-    private double _lastFrameMs;
 
     public ViewportControl()
     {
@@ -163,7 +158,6 @@ public sealed class ViewportControl : Control
         g.Clear(T.Background);
         if (Scene == null || w <= 0 || h <= 0) return;
 
-        _frameClock.Restart();
         var settings = SettingsSource?.Invoke();
 
         if (ShowFilled && settings != null)
@@ -186,16 +180,11 @@ public sealed class ViewportControl : Control
         g.TranslateTransform(w / 2f, -h / 2f);
         g.SmoothingMode = SmoothingMode.AntiAlias;
 
-        DrawAxesCross(g, w, h);
         if (ShowWireframe) DrawWireframe(g);
         if (ShowControlNet) DrawControlNets(g);
         if (Light != null) DrawLight(g);
 
         g.Restore(state);
-        _lastFrameMs = _frameClock.Elapsed.TotalMilliseconds;
-
-        DrawGizmo(g, h);
-        DrawHud(g);
     }
 
     private void EnsureBuffers(int w, int h)
@@ -204,13 +193,6 @@ public sealed class ViewportControl : Control
         _bitmap?.Dispose();
         _frame = new FrameBuffer(w, h);
         _bitmap = new Bitmap(w, h, PixelFormat.Format32bppPArgb); // alpha is always 255, so ARGB == PARGB
-    }
-
-    private static void DrawAxesCross(Graphics g, int w, int h)
-    {
-        using var pen = new Pen(Color.FromArgb(28, T.Accent), 1);
-        g.DrawLine(pen, -w / 2f, 0, w / 2f, 0);
-        g.DrawLine(pen, 0, -h / 2f, 0, h / 2f);
     }
 
     private void DrawWireframe(Graphics g)
@@ -291,57 +273,5 @@ public sealed class ViewportControl : Control
         }
         using var core = new SolidBrush(T.LightMarker);
         g.FillEllipse(core, c.X - 5, c.Y - 5, 10, 10);
-    }
-
-    /// <summary>Orientation gizmo: the rotated x/y/z axes, drawn back-to-front.</summary>
-    private void DrawGizmo(Graphics g, int h)
-    {
-        var o = Scene!.Orientation;
-        var centre = new PointF(56, h - 56);
-        const float length = 34;
-        (Vector3 axis, string label, Color color)[] axes =
-        [
-            (o.Column1, "x", Color.FromArgb(0xF8, 0x71, 0x71)),
-            (o.Column2, "y", Color.FromArgb(0x4A, 0xDE, 0x80)),
-            (o.Column3, "z", Color.FromArgb(0x60, 0xA5, 0xFA)),
-        ];
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        using (var ring = new Pen(T.Border, 1))
-            g.DrawEllipse(ring, centre.X - length - 8, centre.Y - length - 8, 2 * (length + 8), 2 * (length + 8));
-
-        foreach (var (axis, label, color) in axes.OrderBy(a => a.axis.Z))
-        {
-            var tip = new PointF(centre.X + axis.X * length, centre.Y - axis.Y * length);
-            int alpha = axis.Z < 0 ? 110 : 255;
-            using var pen = new Pen(Color.FromArgb(alpha, color), 2f);
-            g.DrawLine(pen, centre, tip);
-            TextRenderer.DrawText(g, label, T.MonoSmall,
-                new Point((int)(centre.X + axis.X * (length + 9)) - 4, (int)(centre.Y - axis.Y * (length + 9)) - 7),
-                Color.FromArgb(alpha, color));
-        }
-    }
-
-    private void DrawHud(Graphics g)
-    {
-        int triangles = Scene!.Meshes.Sum(m => m.Triangles.Count);
-        var lines = new List<string>
-        {
-            $"FRAME  {_lastFrameMs,6:0.0} ms",
-            $"TRIS   {triangles,6:N0}",
-        };
-        if (Light != null)
-        {
-            var p = Light.Position;
-            lines.Add($"LIGHT  {p.X,5:0.00} {p.Y,5:0.00} {p.Z,5:0.00}");
-            lines.Add(Light.IsRunning ? "ANIM   running" : "ANIM   paused");
-        }
-        if (EditLightPath) lines.Add("MODE   edit light path");
-
-        int y = 10;
-        foreach (string line in lines)
-        {
-            TextRenderer.DrawText(g, line, T.MonoSmall, new Point(12, y), T.TextMuted);
-            y += 15;
-        }
     }
 }
