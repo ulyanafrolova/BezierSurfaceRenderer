@@ -4,7 +4,7 @@ Program wyświetla powierzchnie Béziera trzeciego stopnia wczytane z pliku teks
 
 ## 1. Szybki start
 
-- Powierzchnie są wczytywane podczas uruchamiania programu z pliku `Assets/surfaces.txt` (obok pliku programu). Inny plik można podać jako pierwszy argument wiersza poleceń: `BezierSurfaceRenderer.exe moje_powierzchnie.txt`.
+- Powierzchnie są wczytywane podczas uruchamiania programu z pliku `Assets/surfaces.txt` (obok pliku programu). Aby wczytać inne powierzchnie, należy podmienić ten plik.
 - **Przeciąganie lewym przyciskiem myszy** w obszarze rysowania obraca scenę.
 - Panel po prawej stronie służy do zmiany dokładności triangulacji, rysowanych elementów, materiału, koloru obiektu, mapy wektorów normalnych i światła.
 

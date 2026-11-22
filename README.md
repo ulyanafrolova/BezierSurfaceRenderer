@@ -16,7 +16,6 @@ Pełna dokumentacja (instrukcja obsługi i opis techniczny):
 dotnet run --project src/BezierSurfaceRenderer.App
 ```
 lub otwórz `BezierSurfaceRenderer.sln` w Visual Studio i uruchom projekt `BezierSurfaceRenderer.App`.
-Opcjonalny argument: ścieżka do innego pliku z powierzchniami (`BezierSurfaceRenderer.exe sciezka\do\surfaces.txt`).
 
 ## Testy
 Rdzeń niezależny od interfejsu (matematyka, wypełnianie, oświetlenie, renderowanie) jest pokryty testami

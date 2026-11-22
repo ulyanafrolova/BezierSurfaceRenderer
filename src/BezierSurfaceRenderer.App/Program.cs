@@ -6,17 +6,15 @@ internal static class Program
     private const int InitialDivisions = 16;
 
     /// <summary>
-    /// Startup: loads Assets/surfaces.txt (or the path given as the first argument) BEFORE the form
+    /// Startup: loads Assets/surfaces.txt BEFORE the form
     /// is shown (spec §1). On a read/parse error shows a message box naming the file and line, then exits.
     /// </summary>
     [STAThread]
-    private static void Main(string[] args)
+    private static void Main()
     {
         ApplicationConfiguration.Initialize();
 
-        string path = args.Length > 0
-            ? Path.GetFullPath(args[0])
-            : Path.Combine(AppContext.BaseDirectory, "Assets", "surfaces.txt");
+        string path = Path.Combine(AppContext.BaseDirectory, "Assets", "surfaces.txt");
 
         IReadOnlyList<BezierSurface> surfaces;
         try
