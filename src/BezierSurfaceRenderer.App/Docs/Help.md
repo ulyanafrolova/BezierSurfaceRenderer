@@ -70,7 +70,7 @@ Każda powierzchnia to 16 kolejnych wierszy `x y z` (liczby rzeczywiste, kropka 
 ## 6. Przekształcenie ruchu myszy na obrót obiektu (opis techniczny)
 
 ### 6.1 Narastające składanie orientacji
-Scena przechowuje jedną macierz orientacji R o wymiarach 3×3 (konwencja wektorów kolumnowych, P' = R·P), początkowo równą macierzy jednostkowej. Każde zdarzenie ruchu myszy podczas przeciągania wyznacza mały obrót R_przyrost, obliczany wyłącznie na podstawie **poprzedniego** i **bieżącego** położenia kursora, i składa go z aktualną orientacją:
+Scena przechowuje jedną macierz orientacji R o wymiarach 3×3 (konwencja wektorów kolumnowych, P' = R·P), początkowo równą Rx(−0,9)·Rz(0,6) (lekkie pochylenie, aby od razu było widać, że powierzchnie są trójwymiarowe; klawisz R przywraca ten widok). Każde zdarzenie ruchu myszy podczas przeciągania wyznacza mały obrót R_przyrost, obliczany wyłącznie na podstawie **poprzedniego** i **bieżącego** położenia kursora, i składa go z aktualną orientacją:
 
 ```
 R_nowa = R_przyrost · R_aktualna

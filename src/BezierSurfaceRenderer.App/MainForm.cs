@@ -15,6 +15,9 @@ public sealed class MainForm : Form
 
     private const float LightPathRadius = 2.0f;
 
+    /// <summary>Start (and Reset) view: tilted, so the surfaces are seen in 3D and not straight from above as a square.</summary>
+    private static readonly Mat3 StartView = Mat3.RotationX(-0.9f) * Mat3.RotationZ(0.6f);
+
     private static readonly string AssetsDir = Path.Combine(AppContext.BaseDirectory, "Assets");
 
     private readonly Scene _scene;
@@ -51,6 +54,7 @@ public sealed class MainForm : Form
         KeyPreview = true;
 
         LoadDefaultAssets();
+        _scene.Rotate(StartView);
 
         // Dock order: the Fill control must be added first so it receives the remaining space.
         Controls.Add(_viewport);
@@ -185,6 +189,7 @@ public sealed class MainForm : Form
     private void ResetView()
     {
         _scene.ResetOrientation();
+        _scene.Rotate(StartView);
         _viewport.Invalidate();
     }
 
