@@ -30,4 +30,3 @@ dotnet test
 | `src/BezierSurfaceRenderer.Core` | Geometria, obroty, wypełnianie (ET/AET), Z-buffer, oświetlenie, krzywa światła (bez UI) |
 | `src/BezierSurfaceRenderer.App` | Interfejs WinForms, zasoby (`surfaces.txt`, tekstura, mapy normalnych), dokumentacja |
 | `tests/BezierSurfaceRenderer.Core.Tests` | Testy xUnit |
-| `tools/gen_assets.py` | Generuje domyślną teksturę i mapy wektorów normalnych |
