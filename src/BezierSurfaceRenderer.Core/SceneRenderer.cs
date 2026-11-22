@@ -68,7 +68,6 @@ public static class SceneRenderer
             float v = t.T.A.V * la + t.T.B.V * lb + t.T.C.V * lc;
 
             Vector3 n = Vector3.Normalize(a.N * la + b.N * lb + c.N * lc);
-            if (n.Z < 0) n = -n; // two-sided lighting: the visible side faces the observer V = [0,0,1]
 
             if (s.NormalMap != null)
             {
@@ -76,6 +75,9 @@ public static class SceneRenderer
                 Vector3 pv = a.Pv * la + b.Pv * lb + c.Pv * lc;
                 n = NormalMapping.Perturb(pu, pv, n, NormalMapping.Decode(s.NormalMap.Sample(u, v)));
             }
+            // Two-sided lighting: the visible side faces the observer V = [0,0,1]. Flipped only after the
+            // normal map, so the relief is not inverted on the back side.
+            if (n.Z < 0) n = -n;
 
             fb.Color[y * fb.Width + x] = Lighting.ToArgb(Lighting.Shade(n, point, t.Surface.ObjectColor(u, v), s));
         }
