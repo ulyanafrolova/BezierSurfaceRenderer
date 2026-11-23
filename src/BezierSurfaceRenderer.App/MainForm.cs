@@ -200,15 +200,6 @@ public sealed class MainForm : Form
             case Keys.D1: _showNet.Checked = !_showNet.Checked; return true;
             case Keys.D2: _showMesh.Checked = !_showMesh.Checked; return true;
             case Keys.D3: _showFill.Checked = !_showFill.Checked; return true;
-            case Keys.T: (_textured.Checked ? _solid : _textured).Checked = true; return true;
-            case Keys.S: _surfacePicker.SelectedIndex = (_surfacePicker.SelectedIndex + 1) % _surfacePicker.Items.Count; return true;
-            case Keys.N: _normalMapOn.Checked = !_normalMapOn.Checked; return true;
-            case Keys.OemOpenBrackets: _divisions.Value = Math.Max(_divisions.Minimum, _divisions.Value - 1); return true;
-            case Keys.OemCloseBrackets: _divisions.Value = Math.Min(_divisions.Maximum, _divisions.Value + 1); return true;
-            case Keys.Control | Keys.T: LoadImage(isNormalMap: false); return true;
-            case Keys.Control | Keys.N: LoadImage(isNormalMap: true); return true;
-            case Keys.Control | Keys.L: PickColor(light: true); return true;
-            case Keys.Control | Keys.K: PickColor(light: false); return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
     }
@@ -218,8 +209,8 @@ public sealed class MainForm : Form
     private MenuStrip BuildMenu()
     {
         var file = new ToolStripMenuItem("&File");
-        file.DropDownItems.Add(Item("Load &texture…", "Ctrl+T", () => LoadImage(false)));
-        file.DropDownItems.Add(Item("Load &normal map…", "Ctrl+N", () => LoadImage(true)));
+        file.DropDownItems.Add(Item("Load &texture…", null, () => LoadImage(false)));
+        file.DropDownItems.Add(Item("Load &normal map…", null, () => LoadImage(true)));
         file.DropDownItems.Add(new ToolStripSeparator());
         file.DropDownItems.Add(Item("E&xit", "Alt+F4", Close));
 
@@ -227,8 +218,8 @@ public sealed class MainForm : Form
         view.DropDownItems.Add(Item("&Reset orientation", "R", ResetView));
 
         var colors = new ToolStripMenuItem("&Colors");
-        colors.DropDownItems.Add(Item("&Light color (IL)…", "Ctrl+L", () => PickColor(true)));
-        colors.DropDownItems.Add(Item("&Object color (IO) of selected surface…", "Ctrl+K", () => PickColor(false)));
+        colors.DropDownItems.Add(Item("&Light color (IL)…", null, () => PickColor(true)));
+        colors.DropDownItems.Add(Item("&Object color (IO) of selected surface…", null, () => PickColor(false)));
 
         var help = new ToolStripMenuItem("&Help");
         help.DropDownItems.Add(Item("&Documentation", "F1", ShowHelp));
@@ -239,7 +230,7 @@ public sealed class MainForm : Form
         return menu;
 
         // Shortcuts are only displayed here; ProcessCmdKey handles them so they work everywhere.
-        static ToolStripMenuItem Item(string text, string shortcut, Action action)
+        static ToolStripMenuItem Item(string text, string? shortcut, Action action)
         {
             var item = new ToolStripMenuItem(text) { ShortcutKeyDisplayString = shortcut };
             item.Click += (_, _) => action();
@@ -282,7 +273,7 @@ public sealed class MainForm : Form
         _textured = new RadioButton { Text = "Texture", AutoSize = true };
         _textured.CheckedChanged += (_, _) => { SelectedSurface.UseTexture = _textured.Checked; _viewport.Invalidate(); };
         _objectColor = PanelButton("Color…", () => PickColor(false));
-        Add(new Label { Text = "Surface to edit (S):", AutoSize = true }, _surfacePicker, _solid, _textured, _objectColor, PanelButton("Load texture…", () => LoadImage(false)));
+        Add(new Label { Text = "Surface to edit:", AutoSize = true }, _surfacePicker, _solid, _textured, _objectColor, PanelButton("Load texture…", () => LoadImage(false)));
         ShowSelectedMaterial();
 
         Add(Header("Normal map"));

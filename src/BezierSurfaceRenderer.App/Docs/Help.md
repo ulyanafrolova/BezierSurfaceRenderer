@@ -29,14 +29,6 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 | 1 | Pokazuje / ukrywa wieloboki Béziera (siatki kontrolne) |
 | 2 | Pokazuje / ukrywa siatkę trójkątów |
 | 3 | Pokazuje / ukrywa wypełnione trójkąty |
-| S | Wybiera następną powierzchnię, której kolor obiektu IO jest edytowany |
-| T | Przełącza kolor obiektu wybranej powierzchni: jednolity kolor / tekstura |
-| N | Włącza / wyłącza mapę wektorów normalnych |
-| [ oraz ] | Zmniejsza / zwiększa dokładność triangulacji |
-| Ctrl+T | Wczytuje teksturę dla wybranej powierzchni |
-| Ctrl+N | Wczytuje mapę wektorów normalnych |
-| Ctrl+L | Wybór koloru światła IL |
-| Ctrl+K | Wybór jednolitego koloru obiektu IO wybranej powierzchni |
 | Strzałki, PgUp/PgDn, Home/End, kółko myszy | Zmiana wartości aktywnego suwaka |
 
 ## 4. Panel sterowania
@@ -51,7 +43,7 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 - **kd**, **ks** (0–1) oraz **m** (1–100) — współczynniki modelu oświetlenia, jednakowe dla wszystkich trójkątów.
 
 ### Object color (kolor obiektu IO)
-- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy (lub klawiszem S), a potem **jednolity kolor** (menu **Colors → Object color** lub przycisk „Color…”, który pokazuje bieżący kolor) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
+- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy, a potem **jednolity kolor** (menu **Colors → Object color** lub przycisk „Color…”, który pokazuje bieżący kolor) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
 
 ### Normal map (mapa wektorów normalnych)
 - **Normal map** — modyfikacja wektora normalnego na podstawie wczytanej mapy wektorów normalnych (domyślnie: cegły; w katalogu `Assets/normalmaps` jest też mapa ze sferą).
