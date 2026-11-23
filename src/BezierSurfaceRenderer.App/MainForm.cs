@@ -33,7 +33,7 @@ public sealed class MainForm : Form
     private ComboBox _surfacePicker = null!;
     private RadioButton _solid = null!, _textured = null!;
     private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!;
-    private Button _objectColor = null!, _lightColorButton = null!;
+    private Panel _objectSwatch = null!, _lightSwatch = null!; // small squares showing the current colours
 
     public MainForm(Scene scene)
     {
@@ -88,7 +88,7 @@ public sealed class MainForm : Form
         _solid.Checked = !surface.UseTexture;
         _textured.Checked = surface.UseTexture;
         _textured.Text = $"Texture ({surface.Texture?.Name ?? "none"})";
-        _objectColor.BackColor = ToColor(surface.SolidColor);
+        _objectSwatch.BackColor = ToColor(surface.SolidColor);
     }
 
     /// <summary>Only requests a redraw; the viewport moves the light by the real time elapsed since its last frame.</summary>
@@ -164,7 +164,7 @@ public sealed class MainForm : Form
     {
         using var dialog = new ColorDialog { FullOpen = true, Color = light ? _lightColor : ToColor(SelectedSurface.SolidColor) };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        if (light) { _lightColor = dialog.Color; _lightColorButton.BackColor = dialog.Color; }
+        if (light) { _lightColor = dialog.Color; _lightSwatch.BackColor = dialog.Color; }
         else
         {
             SelectedSurface.SolidColor = ToVector(dialog.Color);
@@ -272,8 +272,9 @@ public sealed class MainForm : Form
         _solid = new RadioButton { Text = "Solid color", AutoSize = true };
         _textured = new RadioButton { Text = "Texture", AutoSize = true };
         _textured.CheckedChanged += (_, _) => { SelectedSurface.UseTexture = _textured.Checked; _viewport.Invalidate(); };
-        _objectColor = PanelButton("Color…", () => PickColor(false));
-        Add(new Label { Text = "Surface to edit:", AutoSize = true }, _surfacePicker, _solid, _textured, _objectColor, PanelButton("Load texture…", () => LoadImage(false)));
+        _objectSwatch = Swatch();
+        Add(new Label { Text = "Surface to edit:", AutoSize = true }, _surfacePicker, _solid, _textured,
+            ColorRow("Color…", () => PickColor(false), _objectSwatch), PanelButton("Load texture…", () => LoadImage(false)));
         ShowSelectedMaterial();
 
         Add(Header("Normal map"));
@@ -283,11 +284,11 @@ public sealed class MainForm : Form
         Add(Header("Light"));
         _lightZ = Slider(panel, "Light z", -40, 120, (int)MathF.Round(_light.Z * 20), v => (v / 20f).ToString("0.00"));
         _lightZ.ValueChanged += (_, _) => { _light.Z = _lightZ.Value / 20f; _viewport.Invalidate(); };
-        _lightColorButton = PanelButton("Light color…", () => PickColor(true));
-        _lightColorButton.BackColor = _lightColor;
+        _lightSwatch = Swatch();
+        _lightSwatch.BackColor = _lightColor;
         _animate = Check("Animate light", true);
         _editPath = Check("Edit light path", false);
-        Add(_lightColorButton, _animate, _editPath);
+        Add(ColorRow("Light color…", () => PickColor(true), _lightSwatch), _animate, _editPath);
         // FlowLayoutPanel ignores its bottom padding when scrolling; an empty spacer lets the last row scroll fully into view.
         Add(new Label { Height = 30 });
 
@@ -321,6 +322,19 @@ public sealed class MainForm : Form
         var box = new CheckBox { Text = text, Checked = value, AutoSize = true };
         box.CheckedChanged += (_, _) => SyncViewFlags();
         return box;
+    }
+
+    private static Panel Swatch() => new() { Size = new Size(24, 24), BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(6, 4, 0, 0) };
+
+    /// <summary>Plain button with a small colour square next to it.</summary>
+    private static FlowLayoutPanel ColorRow(string text, Action action, Panel swatch)
+    {
+        var button = PanelButton(text, action);
+        button.Width = ContentWidth - 36;
+        var row = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
+        row.Controls.Add(button);
+        row.Controls.Add(swatch);
+        return row;
     }
 
     private static Button PanelButton(string text, Action action)
