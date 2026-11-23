@@ -99,13 +99,6 @@ public class SceneTests
     }
 
     [Fact]
-    public void Roll_CounterClockwiseIsPositiveZRotation()
-    {
-        var r = Arcball.RollIncrement(new Vector2(100, 0), new Vector2(0, 100));
-        Near(Vector3.UnitY, r * Vector3.UnitX);
-    }
-
-    [Fact]
     public void BoundingRadiusCoversAllControlPoints()
     {
         var scene = new Scene(Surfaces, 1);

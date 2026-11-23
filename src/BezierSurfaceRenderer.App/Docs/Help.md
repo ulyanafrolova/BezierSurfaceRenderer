@@ -14,7 +14,6 @@ Program wyświetla powierzchnie Béziera trzeciego stopnia wczytane z pliku teks
 |---|---|
 | Przeciąganie lewym przyciskiem | Swobodny obrót (wirtualna kula, trackball) — punkt pod kursorem podąża za kursorem |
 | Przeciąganie przy krawędzi / poza kulą | Obrót wokół osi patrzenia (oś z) |
-| Shift + lewy przycisk lub prawy przycisk | Wyłącznie obrót wokół osi patrzenia |
 | Przeciąganie punktu krzywej światła | Przesuwa punkt kontrolny (tylko w trybie „Edit light path”) |
 
 Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dowolnie wiele razy w dowolnym kierunku.
@@ -115,17 +114,7 @@ R  =  | t·x·y + s·z   t·y·y + c     t·y·z − s·x |
 
 Dla a równego osi x, y lub z wzór sprowadza się dokładnie do macierzy Rx, Ry, Rz podanych w treści zadania.
 
-### 6.3 Obrót wokół osi patrzenia (Shift + lewy przycisk lub prawy przycisk)
-Kąt, o jaki kursor obrócił się wokół środka obszaru rysowania między dwoma kolejnymi położeniami, jest stosowany jako obrót wokół osi z (osi patrzenia):
-
-```
-kąt = atan2(p0 × p1, p0 · p1)       (dwuwymiarowy iloczyn wektorowy i skalarny)
-R_przyrost = Rz(kąt)
-```
-
-Ruch myszy przeciwny do ruchu wskazówek zegara obraca scenę w tym samym kierunku.
-
-### 6.4 Przykład obliczeniowy
+### 6.3 Przykład obliczeniowy
 Obszar rysowania 800×800 (r = 400). Kursor przesuwa się ze środka p0 = (0, 0) do p1 = (40, 0):
 s0 = (0, 0, 1), s1 = (0,1; 0; 0,995); s0 × s1 = (0; 0,1; 0), zatem oś to +y, a kąt to acos(0,995) ≈ 5,7°. R_przyrost = Ry(5,7°): przód obiektu przesuwa się w prawo razem z kursorem.
 

@@ -9,14 +9,14 @@ namespace BezierSurfaceRenderer.App;
 ///   1. SceneRenderer fills the FrameBuffer (if "Filled" is on) → copied into a Bitmap via LockBits.
 ///   2. Overlays with GDI+ using the spec's transform (ScaleTransform(1,−1) + TranslateTransform(W/2, −H/2)),
 ///      so the origin is at the centre, y up: wireframe, Bézier control nets, light path + light marker.
-/// Mouse: left drag → Arcball.TrackballIncrement; Shift+left or right drag → Arcball.RollIncrement;
+/// Mouse: left drag → Arcball.TrackballIncrement;
 /// in "edit light path" mode left drag moves curve control points instead (rotation disabled).
 /// Pixel scale = 0.5·min(W,H) / (1.05·r), r = radius of the sphere around all control points; by the
 /// convex-hull property the surfaces stay inside it, so they fit the viewport at any rotation.
 /// </summary>
 public sealed class ViewportControl : Control
 {
-    private enum DragMode { None, Trackball, Roll, LightPoint }
+    private enum DragMode { None, Trackball, LightPoint }
 
     private static readonly Color Background = Color.FromArgb(24, 24, 28);
     private static readonly Color MeshColor = Color.FromArgb(0, 200, 230);
@@ -94,13 +94,7 @@ public sealed class ViewportControl : Control
             return;
         }
 
-        _drag = e.Button switch
-        {
-            MouseButtons.Left when (ModifierKeys & Keys.Shift) != 0 => DragMode.Roll,
-            MouseButtons.Left => DragMode.Trackball,
-            MouseButtons.Right => DragMode.Roll,
-            _ => DragMode.None,
-        };
+        _drag = e.Button == MouseButtons.Left ? DragMode.Trackball : DragMode.None;
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -112,10 +106,6 @@ public sealed class ViewportControl : Control
             case DragMode.Trackball when Scene != null:
                 float radius = 0.5f * Math.Min(ClientSize.Width, ClientSize.Height);
                 Scene.Rotate(Arcball.TrackballIncrement(ToCentred(_lastMouse), ToCentred(e.Location), radius));
-                Invalidate();
-                break;
-            case DragMode.Roll when Scene != null:
-                Scene.Rotate(Arcball.RollIncrement(ToCentred(_lastMouse), ToCentred(e.Location)));
                 Invalidate();
                 break;
             case DragMode.LightPoint when Light != null:
