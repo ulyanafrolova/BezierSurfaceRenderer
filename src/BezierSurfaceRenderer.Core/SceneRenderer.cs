@@ -67,7 +67,8 @@ public static class SceneRenderer
             float u = t.T.A.U * la + t.T.B.U * lb + t.T.C.U * lc;
             float v = t.T.A.V * la + t.T.B.V * lb + t.T.C.V * lc;
 
-            Vector3 n = Vector3.Normalize(a.N * la + b.N * lb + c.N * lc);
+            Vector3 sum = a.N * la + b.N * lb + c.N * lc; // ~0 only if vertex normals nearly cancel
+            Vector3 n = sum.LengthSquared() > 1e-12f ? Vector3.Normalize(sum) : a.N;
 
             if (s.NormalMap != null)
             {
