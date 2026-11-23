@@ -145,6 +145,6 @@ I = kd·IL·IO·cos(N, L) + ks·IL·IO·cos^m(V, R)
 L = normalize(światło − P),  V = [0, 0, 1],  R = 2⟨N, L⟩N − L
 ```
 
-  uwzględniane są **obie strony powierzchni**: jeżeli interpolowany wektor normalny jest odwrócony od obserwatora (N_z < 0), jest zastępowany przez −N, więc spód powierzchni jest oświetlany tak samo jak wierzch. Ujemny cosinus oznacza, że światło jest po drugiej stronie powierzchni — dany składnik wynosi wtedy 0, a jeżeli cos(N, L) ≤ 0, nie ma też odblasku (światło nie dociera do tej strony). Dopiero wynik końcowy jest mnożony przez 255 i ograniczany do 255.
+  uwzględniane są **obie strony powierzchni**: wektor normalny jest zwracany w stronę obserwatora (jeżeli N_z < 0, jest zastępowany przez −N), więc spód powierzchni jest oświetlany tak samo jak wierzch. Jeżeli światło znajduje się po drugiej stronie powierzchni niż obserwator, widoczna strona nie jest oświetlona (nie ma składowej rozproszonej ani odblasku). Dopiero wynik końcowy jest mnożony przez 255 i ograniczany do 255.
 - **Światło**: punktowe źródło światła poruszające się po zamkniętej krzywej Béziera stopnia 8 (punkty kontrolne V0 … V8, V8 = V0, czyli 9 punktów, w tym 8 różnych) w płaszczyźnie z = const, w układzie obserwatora (krzywa nie obraca się razem ze sceną). Punkt krzywej dla parametru t jest wyznaczany algorytmem de Casteljau; t rośnie z prędkością 0,1 okrążenia na sekundę.
 - **Wydajność**: poziome pasy obrazu są renderowane równolegle; każdy pas ma na wyłączność swoje wiersze bufora koloru i bufora głębokości.
