@@ -32,9 +32,6 @@ public sealed class Texture
         }
     }
 
-    /// <summary>Single-colour texture (used in tests and as a fallback).</summary>
-    public static Texture Solid(Vector3 rgb01) => new(1, 1, [Lighting.ToArgb(rgb01)]);
-
     /// <summary>Nearest-texel lookup, RGB in [0,1]. u → column, v → row.</summary>
     public Vector3 Sample(float u, float v)
     {

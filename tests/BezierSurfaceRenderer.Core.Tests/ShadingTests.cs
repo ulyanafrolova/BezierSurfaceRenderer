@@ -135,7 +135,7 @@ public class ShadingTests
     {
         var surfaces = SurfaceFileParser.Load(SurfacesFile);
         surfaces[0].SolidColor = new Vector3(1, 0, 0);
-        surfaces[1].Texture = Texture.Solid(new Vector3(0, 0, 1));
+        surfaces[1].Texture = TestUtil.SolidTexture(new Vector3(0, 0, 1));
         surfaces[1].UseTexture = true;
         Near(new Vector3(1, 0, 0), surfaces[0].ObjectColor(0.3f, 0.3f));
         Near(new Vector3(0, 0, 1), surfaces[1].ObjectColor(0.3f, 0.3f));
