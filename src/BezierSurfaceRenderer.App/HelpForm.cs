@@ -8,6 +8,8 @@ namespace BezierSurfaceRenderer.App;
 /// </summary>
 public sealed class HelpForm : Form
 {
+    private static readonly Font MonoFont = new("Consolas", 10f);
+
     public HelpForm()
     {
         Text = "Dokumentacja — Bézier Surface Renderer";
@@ -23,7 +25,7 @@ public sealed class HelpForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             BackColor = Color.White,
-            Font = new Font("Consolas", 10f),
+            Font = MonoFont,
             Text = LoadMarkdown().Replace("\r\n", "\n").Replace("\n", "\r\n"),
         };
         Controls.Add(text);

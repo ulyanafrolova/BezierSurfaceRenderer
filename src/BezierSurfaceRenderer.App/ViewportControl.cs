@@ -34,7 +34,6 @@ public sealed class ViewportControl : Control
     private DragMode _drag;
     private Point _lastMouse;
     private int _dragPoint = -1;
-    private int _hoverPoint = -1;
 
     public ViewportControl()
     {
@@ -58,7 +57,7 @@ public sealed class ViewportControl : Control
     public bool EditLightPath
     {
         get => _editLightPath;
-        set { _editLightPath = value; _hoverPoint = -1; Cursor = Cursors.Default; Invalidate(); }
+        set { _editLightPath = value; Invalidate(); }
     }
 
     private float PixelsPerUnit =>
@@ -111,15 +110,6 @@ public sealed class ViewportControl : Control
             case DragMode.LightPoint when Light != null:
                 Light.Points[_dragPoint] = ToModel(e.Location);
                 Invalidate();
-                break;
-            case DragMode.None when EditLightPath && Light != null:
-                int hover = Light.HitTest(ToModel(e.Location), HandleHitPixels / PixelsPerUnit) ?? -1;
-                if (hover != _hoverPoint)
-                {
-                    _hoverPoint = hover;
-                    Cursor = hover >= 0 ? Cursors.SizeAll : Cursors.Default;
-                    Invalidate();
-                }
                 break;
         }
         _lastMouse = e.Location; // incremental: every move is measured from the previous position
@@ -257,14 +247,12 @@ public sealed class ViewportControl : Control
             // Control polygon V0 … V(n−1) closed back to V0 (= Vn); V0 drawn larger.
             using var polygonPen = new Pen(Color.FromArgb(150, PathColor), 1f);
             using var pointBrush = new SolidBrush(PathColor);
-            using var hoverPen = new Pen(Color.White, 2f);
             g.DrawPolygon(polygonPen, light.Points.Select(p => ToOverlay(p)).ToArray());
             for (int k = 0; k < light.Points.Count; k++)
             {
                 var p = ToOverlay(light.Points[k]);
                 float r = k == 0 ? 7 : 5;
                 g.FillRectangle(pointBrush, p.X - r, p.Y - r, 2 * r, 2 * r);
-                if (k == _hoverPoint || k == _dragPoint) g.DrawRectangle(hoverPen, p.X - 8, p.Y - 8, 16, 16);
             }
         }
 
