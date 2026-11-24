@@ -25,6 +25,10 @@ public sealed class BezierSurface
     public Texture? Texture { get; set; }
     public bool UseTexture { get; set; }
 
+    // Normal map, also chosen independently for each surface.
+    public Texture? NormalMap { get; set; }
+    public bool UseNormalMap { get; set; }
+
     /// <summary>IO at (u, v): texel of this surface's texture or its solid colour.</summary>
     public Vector3 ObjectColor(float u, float v) =>
         UseTexture && Texture != null ? Texture.Sample(u, v) : SolidColor;

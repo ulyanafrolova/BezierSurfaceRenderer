@@ -70,11 +70,11 @@ public static class SceneRenderer
             Vector3 sum = a.N * la + b.N * lb + c.N * lc; // ~0 only if vertex normals nearly cancel
             Vector3 n = sum.LengthSquared() > 1e-12f ? Vector3.Normalize(sum) : a.N;
 
-            if (s.NormalMap != null)
+            if (t.Surface.UseNormalMap && t.Surface.NormalMap != null)
             {
                 Vector3 pu = a.Pu * la + b.Pu * lb + c.Pu * lc;
                 Vector3 pv = a.Pv * la + b.Pv * lb + c.Pv * lc;
-                n = NormalMapping.Perturb(pu, pv, n, NormalMapping.Decode(s.NormalMap.Sample(u, v)));
+                n = NormalMapping.Perturb(pu, pv, n, NormalMapping.Decode(t.Surface.NormalMap.Sample(u, v)));
             }
             // Two-sided lighting: the visible side faces the observer V = [0,0,1]. Flipped only after the
             // normal map, so the relief is not inverted on the back side.

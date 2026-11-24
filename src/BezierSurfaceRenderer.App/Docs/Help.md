@@ -42,11 +42,10 @@ Kąty obrotu nie są w żaden sposób ograniczane — scenę można obracać dow
 ### Material (materiał)
 - **kd**, **ks** (0–1) oraz **m** (1–100) — współczynniki modelu oświetlenia, jednakowe dla wszystkich trójkątów.
 
-### Object color (kolor obiektu IO)
-- **Object color IO** — wybierany **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy, a potem **jednolity kolor** (menu **Colors → Object color** lub przycisk „Color…”, który pokazuje bieżący kolor) albo **teksturę**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
-
-### Normal map (mapa wektorów normalnych)
-- **Normal map** — modyfikacja wektora normalnego na podstawie wczytanej mapy wektorów normalnych (domyślnie: cegły; w katalogu `Assets/normalmaps` jest też mapa ze sferą).
+### Surface (color, normal map) — kolor obiektu IO i mapa wektorów normalnych
+Oba parametry są wybierane **niezależnie dla każdej powierzchni**: najpierw wybieramy powierzchnię z listy „Surface to edit”, a pozostałe kontrolki tej sekcji dotyczą tylko jej (np. jedna powierzchnia czerwona, druga z teksturą; jedna z mapą cegieł, druga z mapą sfery lub bez mapy).
+- **Object color IO** — **jednolity kolor** (menu **Colors → Object color** lub przycisk „Color…”, który pokazuje bieżący kolor) albo **tekstura**. Tekstura jest przeskalowana do dziedziny parametrów: punkt P(u, v) przyjmuje kolor teksela (u·szerokość, v·wysokość). Domyślna tekstura jest wczytywana przy starcie (druga powierzchnia startuje z teksturą, pierwsza z jednolitym kolorem); inną można wczytać przyciskiem „Load texture…”.
+- **Normal map** — modyfikacja wektora normalnego na podstawie mapy wektorów normalnych wybranej powierzchni (domyślnie: pierwsza powierzchnia — cegły, druga — sfera; obie wyłączone). Inną mapę można wczytać przyciskiem „Load normal map…”.
 
 ### Light (światło)
 - **Light z** — współrzędna z płaszczyzny, w której porusza się światło.

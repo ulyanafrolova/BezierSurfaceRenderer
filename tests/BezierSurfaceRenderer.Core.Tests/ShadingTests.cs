@@ -142,6 +142,30 @@ public class ShadingTests
     }
 
     [Fact]
+    public void NormalMapIsChosenPerSurface()
+    {
+        // Same tilted normal map loaded on both surfaces, switched on only for the first one.
+        var surfaces = SurfaceFileParser.Load(SurfacesFile);
+        var tilted = TestUtil.SolidTexture(new Vector3(0.95f, 0.5f, 0.6f));
+        foreach (var s in surfaces) s.NormalMap = tilted;
+        surfaces[0].UseNormalMap = true;
+
+        int[] Render(BezierSurface surface)
+        {
+            var fb = new FrameBuffer(61, 61) { PixelsPerUnit = 25 };
+            fb.Clear(0);
+            SceneRenderer.RenderFilled(fb, new Scene([surface], 8).Meshes, Settings(new Vector3(0, 0, 5)));
+            return fb.Color;
+        }
+
+        int[] withMap0 = Render(surfaces[0]), withMap1 = Render(surfaces[1]);
+        surfaces[0].UseNormalMap = false;
+        Assert.NotEqual(Render(surfaces[0]), withMap0);
+        surfaces[1].NormalMap = null;
+        Assert.Equal(Render(surfaces[1]), withMap1);
+    }
+
+    [Fact]
     public void ZBufferShowsNearerSurfaceWhereTheyOverlap()
     {
         var surfaces = SurfaceFileParser.Load(SurfacesFile);

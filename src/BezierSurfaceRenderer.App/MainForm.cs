@@ -24,7 +24,6 @@ public sealed class MainForm : Form
     private readonly ViewportControl _viewport = new() { Dock = DockStyle.Fill };
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 15 };
 
-    private Texture? _normalMap;
     private Color _lightColor = Color.White;
 
     // Controls
@@ -72,16 +71,15 @@ public sealed class MainForm : Form
     // ---------------------------------------------------------------- settings
 
     private RenderSettings CurrentSettings() => new(
-        _kd.Value / 100f, _ks.Value / 100f, _m.Value, ToVector(_lightColor), _light.Position,
-        _normalMapOn.Checked ? _normalMap : null);
+        _kd.Value / 100f, _ks.Value / 100f, _m.Value, ToVector(_lightColor), _light.Position);
 
     private static Vector3 ToVector(Color c) => new Vector3(c.R, c.G, c.B) / 255f;
     private static Color ToColor(Vector3 v) => Color.FromArgb((int)(v.X * 255), (int)(v.Y * 255), (int)(v.Z * 255));
 
-    /// <summary>Surface whose object colour IO is edited by the panel (IO is chosen per surface).</summary>
+    /// <summary>Surface whose object colour IO and normal map are edited by the panel (both are chosen per surface).</summary>
     private BezierSurface SelectedSurface => _scene.Surfaces[Math.Max(0, _surfacePicker.SelectedIndex)];
 
-    /// <summary>Shows the selected surface's IO in the panel.</summary>
+    /// <summary>Shows the selected surface's IO and normal map in the panel.</summary>
     private void ShowSelectedMaterial()
     {
         var surface = SelectedSurface;
@@ -89,6 +87,8 @@ public sealed class MainForm : Form
         _textured.Checked = surface.UseTexture;
         _textured.Text = $"Texture ({surface.Texture?.Name ?? "none"})";
         _objectSwatch.BackColor = ToColor(surface.SolidColor);
+        _normalMapOn.Checked = surface.UseNormalMap;
+        _normalMapOn.Text = $"Normal map ({surface.NormalMap?.Name ?? "none"})";
     }
 
     /// <summary>Only requests a redraw; the viewport moves the light by the real time elapsed since its last frame.</summary>
@@ -109,13 +109,18 @@ public sealed class MainForm : Form
 
     // ---------------------------------------------------------------- assets
 
-    /// <summary>Default texture on every surface (the second one starts textured), bricks normal map.</summary>
+    /// <summary>
+    /// Default texture on every surface (the second one starts textured). Normal maps: bricks on the first
+    /// surface, sphere on the others, all switched off at start.
+    /// </summary>
     private void LoadDefaultAssets()
     {
         var texture = TryLoad(Path.Combine(AssetsDir, "textures", "default.png"), quiet: true);
-        foreach (var surface in _scene.Surfaces) surface.Texture = texture;
+        var bricks = TryLoad(Path.Combine(AssetsDir, "normalmaps", "bricks.png"), quiet: true);
+        var sphere = TryLoad(Path.Combine(AssetsDir, "normalmaps", "sphere.png"), quiet: true);
+        foreach (var surface in _scene.Surfaces) { surface.Texture = texture; surface.NormalMap = sphere; }
+        _scene.Surfaces[0].NormalMap = bricks;
         _scene.Surfaces[1].UseTexture = texture != null;
-        _normalMap = TryLoad(Path.Combine(AssetsDir, "normalmaps", "bricks.png"), quiet: true);
     }
 
     private Texture? TryLoad(string path, bool quiet)
@@ -147,16 +152,15 @@ public sealed class MainForm : Form
 
         if (isNormalMap)
         {
-            _normalMap = texture;
-            _normalMapOn.Text = $"Normal map ({texture.Name})";
-            _normalMapOn.Checked = true;
+            SelectedSurface.NormalMap = texture;
+            SelectedSurface.UseNormalMap = true;
         }
         else
         {
             SelectedSurface.Texture = texture;
             SelectedSurface.UseTexture = true;
-            ShowSelectedMaterial();
         }
+        ShowSelectedMaterial();
         _viewport.Invalidate();
     }
 
@@ -264,7 +268,7 @@ public sealed class MainForm : Form
         foreach (var s in new[] { _kd, _ks, _m }) s.ValueChanged += (_, _) => _viewport.Invalidate();
 
         // Object colour IO, chosen per surface. Both radios sit directly in the panel, so WinForms groups them.
-        Add(Header("Object color"));
+        Add(Header("Surface (color, normal map)"));
         _surfacePicker = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = ContentWidth };
         for (int k = 0; k < _scene.Surfaces.Count; k++) _surfacePicker.Items.Add($"Surface {k + 1}");
         _surfacePicker.SelectedIndex = 0;
@@ -273,13 +277,12 @@ public sealed class MainForm : Form
         _textured = new RadioButton { Text = "Texture", AutoSize = true };
         _textured.CheckedChanged += (_, _) => { SelectedSurface.UseTexture = _textured.Checked; _viewport.Invalidate(); };
         _objectSwatch = Swatch();
+        _normalMapOn = new CheckBox { Text = "Normal map", AutoSize = true };
+        _normalMapOn.CheckedChanged += (_, _) => { SelectedSurface.UseNormalMap = _normalMapOn.Checked; _viewport.Invalidate(); };
         Add(new Label { Text = "Surface to edit:", AutoSize = true }, _surfacePicker, _solid, _textured,
-            ColorRow("Color…", () => PickColor(false), _objectSwatch), PanelButton("Load texture…", () => LoadImage(false)));
+            ColorRow("Color…", () => PickColor(false), _objectSwatch), PanelButton("Load texture…", () => LoadImage(false)),
+            _normalMapOn, PanelButton("Load normal map…", () => LoadImage(true)));
         ShowSelectedMaterial();
-
-        Add(Header("Normal map"));
-        _normalMapOn = Check($"Normal map ({_normalMap?.Name ?? "none"})", false);
-        Add(_normalMapOn, PanelButton("Load normal map…", () => LoadImage(true)));
 
         Add(Header("Light"));
         _lightZ = Slider(panel, "Light z", -40, 120, (int)MathF.Round(_light.Z * 20), v => (v / 20f).ToString("0.00"));

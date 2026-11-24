@@ -4,10 +4,8 @@ namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
 /// Per-frame parameters shared by all triangles (spec §4). Colours are RGB in [0,1].
-/// NormalMap is null when normal mapping is switched off.
 /// </summary>
-public sealed record RenderSettings(float Kd, float Ks, int M, Vector3 LightColor, Vector3 LightPosition,
-                                    Texture? NormalMap = null);
+public sealed record RenderSettings(float Kd, float Ks, int M, Vector3 LightColor, Vector3 LightPosition);
 
 /// <summary>
 /// I = kd·IL·IO·cos(N,L) + ks·IL·IO·cos^m(V,R), evaluated per channel (component-wise Vector3).
