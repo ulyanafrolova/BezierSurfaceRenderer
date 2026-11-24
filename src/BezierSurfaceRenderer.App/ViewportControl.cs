@@ -288,8 +288,10 @@ public sealed class ViewportControl : Control
             var rgb = source.Color;
             Color fill = rgb == Vector3.One ? Color.Yellow : Color.FromArgb((int)(rgb.X * 255), (int)(rgb.Y * 255), (int)(rgb.Z * 255));
             using var brush = new SolidBrush(fill);
-            g.FillEllipse(brush, c.X - 6, c.Y - 6, 12, 12);
-            g.DrawEllipse(Pens.White, c.X - 6, c.Y - 6, 12, 12);
+            const float r = 10f; // large enough to tell the red, green and blue lights apart at a glance
+            g.FillEllipse(brush, c.X - r, c.Y - r, 2 * r, 2 * r);
+            using var outline = new Pen(Color.White, 1.5f);
+            g.DrawEllipse(outline, c.X - r, c.Y - r, 2 * r, 2 * r);
 
             // Spotlight: a short line from the light along its beam axis (projected onto the screen).
             if (source.SpotExponent > 0)
