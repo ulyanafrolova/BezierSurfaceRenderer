@@ -47,14 +47,26 @@ public sealed class LightSource
         return new LightSource(points, z);
     }
 
-    public Vector3 Position
+    public Vector3 Position => PositionAt(0f);
+
+    /// <summary>Point of the path <paramref name="offset"/> of a loop ahead of the current one (z = Z).</summary>
+    public Vector3 PositionAt(float offset)
     {
-        get
-        {
-            Vector2 xy = Evaluate(Phase);
-            return new Vector3(xy.X, xy.Y, Z);
-        }
+        Vector2 xy = Evaluate(Phase + offset);
+        return new Vector3(xy.X, xy.Y, Z);
     }
+
+    /// <summary>Colours of the three lights (spec: red 255 0 0, green, blue).</summary>
+    public static readonly Vector3[] RgbColors = [Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ];
+
+    /// <summary>
+    /// Three point lights (red, green, blue) moving along the same path, a third of a loop apart.
+    /// The spacing is equal in the parameter t, so along the curve it is only roughly equal.
+    /// </summary>
+    public PointLight[] RgbLights() =>
+        Enumerable.Range(0, RgbColors.Length)
+                  .Select(k => new PointLight(PositionAt((float)k / RgbColors.Length), RgbColors[k]))
+                  .ToArray();
 
     /// <summary>Advances Phase by Speed·dt when running (frame-rate independent).</summary>
     public void Advance(TimeSpan dt)

@@ -184,7 +184,7 @@ public sealed class ViewportControl : Control
 
         if (ShowWireframe) DrawWireframe(g);
         if (ShowControlNet) DrawControlNets(g);
-        if (Light != null) DrawLight(g);
+        if (Light != null) DrawLight(g, settings);
 
         g.Restore(state);
     }
@@ -236,7 +236,7 @@ public sealed class ViewportControl : Control
         }
     }
 
-    private void DrawLight(Graphics g)
+    private void DrawLight(Graphics g, RenderSettings? settings)
     {
         var light = Light!;
 
@@ -281,8 +281,15 @@ public sealed class ViewportControl : Control
                 }
         }
 
-        // Current light position on the curve.
-        var c = ToOverlay(light.Position);
-        g.FillEllipse(Brushes.Yellow, c.X - 6, c.Y - 6, 12, 12);
+        // Current position of every light on the curve, filled with its colour (yellow for a white light).
+        foreach (var source in settings?.Lights ?? [])
+        {
+            var c = ToOverlay(source.Position);
+            var rgb = source.Color;
+            Color fill = rgb == Vector3.One ? Color.Yellow : Color.FromArgb((int)(rgb.X * 255), (int)(rgb.Y * 255), (int)(rgb.Z * 255));
+            using var brush = new SolidBrush(fill);
+            g.FillEllipse(brush, c.X - 6, c.Y - 6, 12, 12);
+            g.DrawEllipse(Pens.White, c.X - 6, c.Y - 6, 12, 12);
+        }
     }
 }

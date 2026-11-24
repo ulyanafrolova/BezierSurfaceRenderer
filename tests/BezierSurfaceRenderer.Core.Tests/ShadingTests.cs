@@ -9,7 +9,7 @@ public class ShadingTests
     public void LightStraightAboveGivesKdPlusKs()
     {
         // N = L = V = z ⇒ cos(N,L) = 1, R = z ⇒ cos(V,R) = 1.
-        var p = new RenderSettings(0.6f, 0.3f, 50, Vector3.One, new Vector3(0, 0, 10));
+        var p = new RenderSettings(0.6f, 0.3f, 50, [new PointLight(new Vector3(0, 0, 10), Vector3.One)]);
         var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(0.5f, 1f, 0.2f), p);
         Near(new Vector3(0.45f, 0.9f, 0.18f), color);
     }
@@ -17,7 +17,7 @@ public class ShadingTests
     [Fact]
     public void ChannelsAreIndependent()
     {
-        var p = new RenderSettings(1f, 0f, 1, new Vector3(1f, 0.5f, 0f), Vector3.UnitZ);
+        var p = new RenderSettings(1f, 0f, 1, [new PointLight(Vector3.UnitZ, new Vector3(1f, 0.5f, 0f))]);
         var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, new Vector3(0.8f, 0.8f, 0.8f), p);
         Near(new Vector3(0.8f, 0.4f, 0f), color);
     }
@@ -26,7 +26,7 @@ public class ShadingTests
     public void Light45DegreesMatchesHandComputation()
     {
         // L = (1,0,1)/√2: cosNL = √2/2; R = (−1,0,1)/√2 ⇒ cosVR = √2/2.
-        var p = new RenderSettings(0.5f, 0.5f, 2, Vector3.One, new Vector3(5, 0, 5));
+        var p = new RenderSettings(0.5f, 0.5f, 2, [new PointLight(new Vector3(5, 0, 5), Vector3.One)]);
         var color = Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.One, p);
         float expected = 0.5f * MathF.Sqrt(0.5f) + 0.5f * 0.5f;
         Near(new Vector3(expected), color);
@@ -35,8 +35,21 @@ public class ShadingTests
     [Fact]
     public void NegativeCosinesClampToZero()
     {
-        var p = new RenderSettings(1f, 1f, 10, Vector3.One, new Vector3(0, 0, -3));
+        var p = new RenderSettings(1f, 1f, 10, [new PointLight(new Vector3(0, 0, -3), Vector3.One)]);
         Near(Vector3.Zero, Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.One, p));
+    }
+
+    [Fact]
+    public void SeveralLightsAreAdded()
+    {
+        var n = Vector3.Normalize(new Vector3(0.2f, -0.1f, 1f));
+        var point = new Vector3(0.1f, 0.3f, 0.2f);
+        PointLight red = new(new Vector3(2, 0, 2), Vector3.UnitX), green = new(new Vector3(-1, 1, 3), Vector3.UnitY);
+        Vector3 One(PointLight l) => Lighting.Shade(n, point, Vector3.One, new RenderSettings(0.5f, 0.5f, 10, [l]));
+
+        var both = Lighting.Shade(n, point, Vector3.One, new RenderSettings(0.5f, 0.5f, 10, [red, green]));
+        Near(One(red) + One(green), both);
+        Near(0f, both.Z); // no blue light ⇒ no blue
     }
 
     [Fact]
@@ -101,11 +114,11 @@ public class ShadingTests
     {
         // Normal tilted slightly from the viewer, light straight below: R points almost at V, but no light reaches.
         var n = Vector3.Normalize(new Vector3(1f, 0f, 0.2f));
-        var p = new RenderSettings(0f, 1f, 1, Vector3.One, new Vector3(0, 0, -10));
+        var p = new RenderSettings(0f, 1f, 1, [new PointLight(new Vector3(0, 0, -10), Vector3.One)]);
         Assert.Equal(Vector3.Zero, Lighting.Shade(n, Vector3.Zero, Vector3.One, p));
     }
 
-    private static RenderSettings Settings(Vector3 light) => new(0.5f, 0.5f, 20, Vector3.One, light);
+    private static RenderSettings Settings(Vector3 light) => new(0.5f, 0.5f, 20, [new PointLight(light, Vector3.One)]);
 
     [Fact]
     public void RendererFillsScene()
@@ -189,7 +202,7 @@ public class ShadingTests
         var scene = new Scene(SurfaceFileParser.Load(SurfacesFile).Take(1).ToList(), 1);
         var fb = new FrameBuffer(101, 101) { PixelsPerUnit = 40 };
         fb.Clear(0);
-        var settings = new RenderSettings(0.2f, 0.8f, 30, Vector3.One, new Vector3(0, 0, 4));
+        var settings = new RenderSettings(0.2f, 0.8f, 30, [new PointLight(new Vector3(0, 0, 4), Vector3.One)]);
         SceneRenderer.RenderFilled(fb, scene.Meshes, settings);
 
         int best = Array.IndexOf(fb.Color, fb.Color.MaxBy(c => c & 0xFF));

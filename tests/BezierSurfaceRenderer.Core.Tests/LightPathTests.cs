@@ -127,4 +127,21 @@ public class LightPathTests
         }
         Near2(segments[0][0], light.Evaluate(0.99999f), 1e-3f);
     }
+
+    [Fact]
+    public void ThreeRgbLightsTravelAThirdOfALoopApart()
+    {
+        var light = LightSource.CreateDefault(1f, 2.5f);
+        light.Advance(TimeSpan.FromSeconds(1.3));
+        var lights = light.RgbLights();
+
+        Assert.Equal([Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ], lights.Select(l => l.Color));
+        for (int k = 0; k < 3; k++)
+        {
+            Vector2 expected = light.Evaluate(light.Phase + k / 3f);
+            Near2(expected, new Vector2(lights[k].Position.X, lights[k].Position.Y));
+            Near(2.5f, lights[k].Position.Z);
+        }
+        Near2(new Vector2(light.Position.X, light.Position.Y), new Vector2(lights[0].Position.X, lights[0].Position.Y));
+    }
 }

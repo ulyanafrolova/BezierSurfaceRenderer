@@ -31,7 +31,7 @@ public sealed class MainForm : Form
     private CheckBox _showNet = null!, _showMesh = null!, _showFill = null!;
     private ComboBox _surfacePicker = null!;
     private RadioButton _solid = null!, _textured = null!;
-    private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!, _bSpline = null!;
+    private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!, _bSpline = null!, _threeLights = null!;
     private Panel _objectSwatch = null!, _lightSwatch = null!; // small squares showing the current colours
 
     public MainForm(Scene scene)
@@ -70,8 +70,10 @@ public sealed class MainForm : Form
 
     // ---------------------------------------------------------------- settings
 
+    /// <summary>One light of the chosen colour, or the three red/green/blue lights on the same path.</summary>
     private RenderSettings CurrentSettings() => new(
-        _kd.Value / 100f, _ks.Value / 100f, _m.Value, ToVector(_lightColor), _light.Position);
+        _kd.Value / 100f, _ks.Value / 100f, _m.Value,
+        _threeLights.Checked ? _light.RgbLights() : [new PointLight(_light.Position, ToVector(_lightColor))]);
 
     private static Vector3 ToVector(Color c) => new Vector3(c.R, c.G, c.B) / 255f;
     private static Color ToColor(Vector3 v) => Color.FromArgb((int)(v.X * 255), (int)(v.Y * 255), (int)(v.Z * 255));
@@ -293,7 +295,8 @@ public sealed class MainForm : Form
         _animate = Check("Animate light", true);
         _editPath = Check("Edit light path", false);
         _bSpline = Check("B-spline path (Bézier segments)", false);
-        Add(ColorRow("Light color…", () => PickColor(true), _lightSwatch), _animate, _editPath, _bSpline);
+        _threeLights = Check("Three lights (R, G, B)", false);
+        Add(ColorRow("Light color…", () => PickColor(true), _lightSwatch), _animate, _editPath, _bSpline, _threeLights);
         // FlowLayoutPanel ignores its bottom padding when scrolling; an empty spacer lets the last row scroll fully into view.
         Add(new Label { Height = 30 });
 
