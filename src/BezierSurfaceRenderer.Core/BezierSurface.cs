@@ -20,7 +20,7 @@ public sealed class BezierSurface
 
     public Vector3[,] ControlPoints { get; }
 
-    // Object colour IO, chosen independently for each surface (spec §4.6).
+    // Object colour IO, chosen independently for each surface.
     public Vector3 SolidColor { get; set; } = new(0.85f, 0.88f, 0.93f);
     public Texture? Texture { get; set; }
     public bool UseTexture { get; set; }

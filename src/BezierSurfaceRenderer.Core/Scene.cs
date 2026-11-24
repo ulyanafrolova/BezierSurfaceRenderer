@@ -5,7 +5,7 @@ namespace BezierSurfaceRenderer.Core;
 /// <summary>
 /// Model state: surfaces, their meshes at the current density, and the accumulated orientation.
 /// Model units: all control points lie in roughly [−1,1]³; the App scales units → pixels so that
-/// the circumscribed sphere (radius √3) always fits the viewport (spec §1, "any rotation").
+/// the circumscribed sphere (radius √3) always fits the viewport at any rotation.
 /// </summary>
 public sealed class Scene
 {
@@ -49,7 +49,7 @@ public sealed class Scene
     /// <summary>Rotated control points of a surface (for drawing the Bézier control net).</summary>
     public Vector3 RotatedControlPoint(BezierSurface surface, int i, int j) => Orientation * surface.ControlPoints[i, j];
 
-    // Vertices are always rotated from their ORIGINAL data by the accumulated matrix, so mesh data
+    // Vertices are always rotated from their original data by the accumulated matrix, so mesh data
     // never accumulates error; only the orientation is composed incrementally.
     private void ApplyOrientation()
     {

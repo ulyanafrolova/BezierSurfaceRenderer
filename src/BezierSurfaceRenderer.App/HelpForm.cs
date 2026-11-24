@@ -4,7 +4,7 @@ using Markdig;
 namespace BezierSurfaceRenderer.App;
 
 /// <summary>
-/// In-app documentation (spec §7), opened with F1 / Help menu: the embedded Help.md rendered to HTML.
+/// In-app documentation, opened with F1 / Help menu: the embedded Help.md rendered to HTML.
 /// The same Help.md is the repository's user documentation, so there is one source of truth.
 /// </summary>
 public sealed class HelpForm : Form

@@ -3,7 +3,7 @@ using System.Numerics;
 namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
-/// Point light moving along a closed curve in the plane z = Z (spec §4.5). Two kinds of path:
+/// Point light moving along a closed curve in the plane z = Z. Two kinds of path:
 ///  • Bézier: one curve of degree n = Points.Count with control points V0 … V(n−1), Vn = V0 (the closing
 ///    point is not stored, so dragging V0 also moves Vn). The default curve has 8 distinct points (V8 = V0).
 ///  • B-spline: V0 … V(n−1) are the vertices of a closed B-spline polygon; the cubic B-spline is built
@@ -56,7 +56,7 @@ public sealed class LightSource
         return new Vector3(xy.X, xy.Y, Z);
     }
 
-    /// <summary>Colours of the three lights (spec: red 255 0 0, green, blue).</summary>
+    /// <summary>Colours of the three lights: red, green, blue.</summary>
     public static readonly Vector3[] RgbColors = [Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ];
 
     /// <summary>

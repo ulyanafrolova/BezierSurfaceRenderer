@@ -47,7 +47,7 @@ public static class NormalMapping
     public static Vector3 Decode(Vector3 rgb01) => Vector3.Normalize(2f * rgb01 - Vector3.One);
 
     /// <summary>
-    /// N = M · N_tex, M = [Pu, Pv, N_surface] as columns (spec §6). Pu, Pv are normalised first;
+    /// N = M · N_tex, M = [Pu, Pv, N_surface] as columns. Pu, Pv are normalised first;
     /// falls back to N_surface when a tangent is degenerate. Result normalised.
     /// </summary>
     public static Vector3 Perturb(Vector3 pu, Vector3 pv, Vector3 nSurface, Vector3 nTexture)

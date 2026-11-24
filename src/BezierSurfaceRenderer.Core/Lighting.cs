@@ -10,14 +10,14 @@ namespace BezierSurfaceRenderer.Core;
 public readonly record struct PointLight(Vector3 Position, Vector3 Color, Vector3 SpotDirection = default, float SpotExponent = 0f);
 
 /// <summary>
-/// Per-frame parameters shared by all triangles (spec §4). Colours are RGB in [0,1].
+/// Per-frame parameters shared by all triangles. Colours are RGB in [0,1].
 /// Lights: one light, or the three red/green/blue lights moving along the path.
 /// </summary>
 public sealed record RenderSettings(float Kd, float Ks, int M, IReadOnlyList<PointLight> Lights);
 
 /// <summary>
 /// I = Σ over lights [ kd·IL·IO·cos(N,L) + ks·IL·IO·cos^m(V,R) ], evaluated per channel (component-wise Vector3).
-/// With several lights the single-light term is simply computed for each of them and the results are added.
+/// With several lights the single-light term is computed for each of them and the results are added.
 /// For a spotlight IL is replaced by IL·cos^p(−L, D) (see <see cref="SpotFactor"/>).
 ///   L = normalize(lightPos − P), V = [0,0,1], R = 2⟨N,L⟩N − L (normalised).
 /// Both sides of the surface are lit: the caller turns N towards the observer (see SceneRenderer).

@@ -3,7 +3,7 @@ using System.Numerics;
 namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
-/// 3×3 matrix using the COLUMN-VECTOR convention from the assignment: P' = R · P,
+/// 3×3 matrix, column-vector convention: P' = R · P,
 /// x' = r11·x + r12·y + r13·z, etc. Deliberately not System.Numerics.Matrix4x4,
 /// which uses the row-vector convention and would invert multiplication order.
 /// </summary>
@@ -34,7 +34,7 @@ public readonly struct Mat3
             c1.Y, c2.Y, c3.Y,
             c1.Z, c2.Z, c3.Z);
 
-    /// <summary>Rx(θ), Ry(θ), Rz(θ) exactly as given in the assignment.</summary>
+    /// <summary>Rotation matrices Rx(θ), Ry(θ), Rz(θ).</summary>
     public static Mat3 RotationX(float theta)
     {
         var (s, c) = MathF.SinCos(theta);

@@ -7,7 +7,7 @@ namespace BezierSurfaceRenderer.App;
 /// <summary>
 /// Drawing area. Per frame:
 ///   1. SceneRenderer fills the FrameBuffer (if "Filled" is on) → copied into a Bitmap via LockBits.
-///   2. Overlays with GDI+ using the spec's transform (ScaleTransform(1,−1) + TranslateTransform(W/2, −H/2)),
+///   2. Overlays with GDI+ using the transform (ScaleTransform(1,−1) + TranslateTransform(W/2, −H/2)),
 ///      so the origin is at the centre, y up: wireframe, Bézier control nets, light path + light marker.
 /// Mouse: left drag → Arcball.TrackballIncrement;
 /// in "edit light path" mode left drag moves curve control points instead (rotation disabled).
@@ -176,7 +176,7 @@ public sealed class ViewportControl : Control
             g.CompositingMode = CompositingMode.SourceOver;
         }
 
-        // Origin in the centre, y up — exactly as suggested in the assignment.
+        // Origin in the centre, y up.
         var state = g.Save();
         g.ScaleTransform(1, -1);
         g.TranslateTransform(w / 2f, -h / 2f);

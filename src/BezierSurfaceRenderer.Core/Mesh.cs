@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace BezierSurfaceRenderer.Core;
 
-/// <summary>Mesh vertex as in spec §3: data before rotation, after rotation, and its (u, v).</summary>
+/// <summary>Mesh vertex: data before rotation, after rotation, and its (u, v).</summary>
 public sealed class Vertex
 {
     public float U { get; }
@@ -27,10 +27,10 @@ public sealed class Vertex
     }
 }
 
-/// <summary>Spec §3: a triangle is three vertices (shared with neighbouring triangles).</summary>
+/// <summary>A triangle is three vertices (shared with neighbouring triangles).</summary>
 public sealed record Triangle(Vertex A, Vertex B, Vertex C);
 
-/// <summary>Spec §3: a mesh is a list of triangles. Also keeps the source surface for control-net drawing.</summary>
+/// <summary>A mesh is a list of triangles. Also keeps the source surface for control-net drawing.</summary>
 public sealed class Mesh
 {
     public BezierSurface Surface { get; }

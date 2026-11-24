@@ -3,7 +3,7 @@ using System.Numerics;
 namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
-/// Maps mouse movement to an INCREMENTAL rotation (spec §2, R_new = R_inc · R_cur).
+/// Maps mouse movement to an incremental rotation (R_new = R_inc · R_cur).
 /// Positions are in pixels relative to the viewport centre, y up.
 ///
 /// Trackball (Shoemake arcball): consecutive cursor positions p0, p1 are projected onto a sphere of

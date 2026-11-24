@@ -3,7 +3,7 @@ using System.Numerics;
 namespace BezierSurfaceRenderer.Core;
 
 /// <summary>
-/// Polygon scan conversion with bucket-sorted edges (spec §4, surnames A–K):
+/// Polygon scan conversion with bucket-sorted edges:
 ///   1. ET: array of buckets indexed by the edge's first scanline; each bucket is a linked list of
 ///      edges (last scanline, x at the first scanline, 1/m = dx/dy). Horizontal edges never enter the ET.
 ///   2. For each scanline y: move bucket[y] into the AET, drop edges whose last scanline has passed,

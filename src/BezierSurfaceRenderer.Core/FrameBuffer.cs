@@ -3,9 +3,9 @@ namespace BezierSurfaceRenderer.Core;
 /// <summary>
 /// Software colour + depth buffer. Pixels are 32-bit ARGB ints (in memory BGRA, i.e. GDI+
 /// Format32bppArgb, so a single copy moves them into a Bitmap). Scene coordinates have the origin at
-/// the centre with y up (spec §1); <see cref="PixelsPerUnit"/> scales model units to pixels:
+/// the centre with y up; <see cref="PixelsPerUnit"/> scales model units to pixels:
 ///   column = W/2 + x·s,  row = H/2 − y·s
-/// Depth: observer looks along −z from +z (V = [0,0,1]), so LARGER z is closer; cleared to −∞.
+/// Depth: observer looks along −z from +z (V = [0,0,1]), so larger z is closer; cleared to −∞.
 /// </summary>
 public sealed class FrameBuffer
 {
