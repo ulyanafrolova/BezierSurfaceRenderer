@@ -290,6 +290,14 @@ public sealed class ViewportControl : Control
             using var brush = new SolidBrush(fill);
             g.FillEllipse(brush, c.X - 6, c.Y - 6, 12, 12);
             g.DrawEllipse(Pens.White, c.X - 6, c.Y - 6, 12, 12);
+
+            // Spotlight: a short line from the light along its beam axis (projected onto the screen).
+            if (source.SpotExponent > 0)
+            {
+                using var beam = new Pen(fill, 2f);
+                var tip = ToOverlay(source.Position + 0.4f * source.SpotDirection);
+                g.DrawLine(beam, c, tip);
+            }
         }
     }
 }

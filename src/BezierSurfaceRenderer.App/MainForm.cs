@@ -27,7 +27,7 @@ public sealed class MainForm : Form
     private Color _lightColor = Color.White;
 
     // Controls
-    private TrackBar _divisions = null!, _kd = null!, _ks = null!, _m = null!, _lightZ = null!;
+    private TrackBar _divisions = null!, _kd = null!, _ks = null!, _m = null!, _lightZ = null!, _spotExponent = null!;
     private CheckBox _showNet = null!, _showMesh = null!, _showFill = null!;
     private ComboBox _surfacePicker = null!;
     private RadioButton _solid = null!, _textured = null!;
@@ -73,7 +73,7 @@ public sealed class MainForm : Form
     /// <summary>One light of the chosen colour, or the three red/green/blue lights on the same path.</summary>
     private RenderSettings CurrentSettings() => new(
         _kd.Value / 100f, _ks.Value / 100f, _m.Value,
-        _threeLights.Checked ? _light.RgbLights() : [new PointLight(_light.Position, ToVector(_lightColor))]);
+        _threeLights.Checked ? _light.RgbLights(_spotExponent.Value) : [new PointLight(_light.Position, ToVector(_lightColor))]);
 
     private static Vector3 ToVector(Color c) => new Vector3(c.R, c.G, c.B) / 255f;
     private static Color ToColor(Vector3 v) => Color.FromArgb((int)(v.X * 255), (int)(v.Y * 255), (int)(v.Z * 255));
@@ -297,6 +297,8 @@ public sealed class MainForm : Form
         _bSpline = Check("B-spline path (Bézier segments)", false);
         _threeLights = Check("Three lights (R, G, B)", false);
         Add(ColorRow("Light color…", () => PickColor(true), _lightSwatch), _animate, _editPath, _bSpline, _threeLights);
+        _spotExponent = Slider(panel, "Spotlight focus p (0 = point)", 0, 200, 50, v => v.ToString());
+        _spotExponent.ValueChanged += (_, _) => _viewport.Invalidate();
         // FlowLayoutPanel ignores its bottom padding when scrolling; an empty spacer lets the last row scroll fully into view.
         Add(new Label { Height = 30 });
 

@@ -53,6 +53,34 @@ public class ShadingTests
     }
 
     [Fact]
+    public void SpotlightIsBrightestOnItsAxisAndFallsOffWithCosPowerP()
+    {
+        // Spotlight at (0,0,4) aimed straight down; flat surface z = 0 facing up.
+        var spot = new PointLight(new Vector3(0, 0, 4), Vector3.One, -Vector3.UnitZ, 20f);
+        var settings = new RenderSettings(1f, 0f, 1, [spot]);
+        var point = new PointLight(spot.Position, Vector3.One);
+
+        // On the axis the spotlight equals a point light.
+        Near(Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.One, new RenderSettings(1f, 0f, 1, [point])),
+             Lighting.Shade(Vector3.UnitZ, Vector3.Zero, Vector3.One, settings));
+
+        // Off the axis: point-light result × cos^20(α), α = angle between the axis and the ray to P.
+        var p = new Vector3(2, 0, 0);
+        float cosAlpha = 4f / MathF.Sqrt(20f);
+        Near(Lighting.Shade(Vector3.UnitZ, p, Vector3.One, new RenderSettings(1f, 0f, 1, [point])) * MathF.Pow(cosAlpha, 20f),
+             Lighting.Shade(Vector3.UnitZ, p, Vector3.One, settings));
+    }
+
+    [Fact]
+    public void SpotFactorIsZeroBehindTheLightAndOneForPointLights()
+    {
+        var spot = new PointLight(Vector3.Zero, Vector3.One, Vector3.UnitX, 5f);
+        Assert.Equal(0f, Lighting.SpotFactor(spot, Vector3.UnitX));  // P lies behind: −L = −x
+        Near(1f, Lighting.SpotFactor(spot, -Vector3.UnitX));          // P on the axis
+        Assert.Equal(1f, Lighting.SpotFactor(new PointLight(Vector3.Zero, Vector3.One), Vector3.UnitY));
+    }
+
+    [Fact]
     public void ToArgbScalesAtTheEndAndClampsTo255()
     {
         Assert.Equal(unchecked((int)0xFFFF8000), Lighting.ToArgb(new Vector3(1.7f, 0.502f, -0.2f)));

@@ -60,13 +60,18 @@ public sealed class LightSource
     public static readonly Vector3[] RgbColors = [Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ];
 
     /// <summary>
-    /// Three point lights (red, green, blue) moving along the same path, a third of a loop apart.
+    /// Three lights (red, green, blue) moving along the same path, a third of a loop apart.
     /// The spacing is equal in the parameter t, so along the curve it is only roughly equal.
+    /// With <paramref name="spotExponent"/> p > 0 they are spotlights aimed at the scene centre (0,0,0);
+    /// p = 0 makes them point lights.
     /// </summary>
-    public PointLight[] RgbLights() =>
-        Enumerable.Range(0, RgbColors.Length)
-                  .Select(k => new PointLight(PositionAt((float)k / RgbColors.Length), RgbColors[k]))
-                  .ToArray();
+    public PointLight[] RgbLights(float spotExponent = 0f) =>
+        Enumerable.Range(0, RgbColors.Length).Select(k =>
+        {
+            Vector3 position = PositionAt((float)k / RgbColors.Length);
+            Vector3 towardsCentre = position.LengthSquared() > 1e-12f ? Vector3.Normalize(-position) : -Vector3.UnitZ;
+            return new PointLight(position, RgbColors[k], towardsCentre, spotExponent);
+        }).ToArray();
 
     /// <summary>Advances Phase by Speed·dt when running (frame-rate independent).</summary>
     public void Advance(TimeSpan dt)

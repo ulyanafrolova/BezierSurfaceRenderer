@@ -144,4 +144,18 @@ public class LightPathTests
         }
         Near2(new Vector2(light.Position.X, light.Position.Y), new Vector2(lights[0].Position.X, lights[0].Position.Y));
     }
+
+    [Fact]
+    public void RgbSpotlightsAimAtTheSceneCentre()
+    {
+        var light = LightSource.CreateDefault(2f, 2.5f);
+        foreach (var spot in light.RgbLights(15f))
+        {
+            Near(15f, spot.SpotExponent);
+            Near(1f, spot.SpotDirection.Length());
+            Near(0f, Vector3.Cross(spot.SpotDirection, -spot.Position).Length()); // parallel to −position
+            Assert.True(Vector3.Dot(spot.SpotDirection, spot.Position) < 0);       // pointing towards (0,0,0)
+        }
+        Assert.All(light.RgbLights(), l => Assert.Equal(0f, l.SpotExponent));
+    }
 }
