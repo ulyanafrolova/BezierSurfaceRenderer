@@ -31,7 +31,7 @@ public sealed class MainForm : Form
     private CheckBox _showNet = null!, _showMesh = null!, _showFill = null!;
     private ComboBox _surfacePicker = null!;
     private RadioButton _solid = null!, _textured = null!;
-    private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!;
+    private CheckBox _normalMapOn = null!, _animate = null!, _editPath = null!, _bSpline = null!;
     private Panel _objectSwatch = null!, _lightSwatch = null!; // small squares showing the current colours
 
     public MainForm(Scene scene)
@@ -104,6 +104,7 @@ public sealed class MainForm : Form
         _viewport.ShowFilled = _showFill.Checked;
         _viewport.EditLightPath = _editPath.Checked;
         _light.IsRunning = _animate.Checked;
+        _light.UseBSpline = _bSpline.Checked;
         _viewport.Invalidate();
     }
 
@@ -291,7 +292,8 @@ public sealed class MainForm : Form
         _lightSwatch.BackColor = _lightColor;
         _animate = Check("Animate light", true);
         _editPath = Check("Edit light path", false);
-        Add(ColorRow("Light color…", () => PickColor(true), _lightSwatch), _animate, _editPath);
+        _bSpline = Check("B-spline path (Bézier segments)", false);
+        Add(ColorRow("Light color…", () => PickColor(true), _lightSwatch), _animate, _editPath, _bSpline);
         // FlowLayoutPanel ignores its bottom padding when scrolling; an empty spacer lets the last row scroll fully into view.
         Add(new Label { Height = 30 });
 

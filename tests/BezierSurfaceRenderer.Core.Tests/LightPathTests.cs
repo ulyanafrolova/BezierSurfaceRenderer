@@ -74,4 +74,57 @@ public class LightPathTests
         Near(0.25f, light.Phase);
         Near(2.5f, light.Position.Z);
     }
+
+    [Fact]
+    public void BSplineHasOneCubicSegmentPerVertexJoinedIntoAClosedCurve()
+    {
+        var light = LightSource.CreateDefault(1f, 0f);
+        light.Points[2] = new Vector2(0.3f, 1.4f); // break symmetry
+        var segments = light.BSplineSegments();
+        int n = light.Points.Count;
+
+        Assert.Equal(n, segments.Length);
+        for (int i = 0; i < n; i++)
+        {
+            Assert.Equal(4, segments[i].Length);
+            Near2(segments[i][3], segments[(i + 1) % n][0]); // end of one segment = start of the next
+        }
+    }
+
+    [Fact]
+    public void BSplineConstructionMatchesKnownCubicBSplineProperties()
+    {
+        var light = LightSource.CreateDefault(1f, 0f);
+        light.Points[5] = new Vector2(-0.2f, -1.3f);
+        var v = light.Points;
+        int n = v.Count;
+        var segments = light.BSplineSegments();
+
+        for (int i = 0; i < n; i++)
+        {
+            // Inner Bézier points divide edge V(i)V(i+1) into thirds; the joint is (V(i−1) + 4V(i) + V(i+1)) / 6.
+            Vector2 prev = v[(i + n - 1) % n], next = v[(i + 1) % n];
+            Near2(v[i] + (next - v[i]) / 3f, segments[i][1]);
+            Near2(v[i] + 2f * (next - v[i]) / 3f, segments[i][2]);
+            Near2((prev + 4f * v[i] + next) / 6f, segments[i][0]);
+
+            // Tangent continuity at the joint (C1): S(i) is the midpoint of B(i−1) and A(i).
+            Near2(segments[i][0] - segments[(i + n - 1) % n][2], segments[i][1] - segments[i][0]);
+        }
+    }
+
+    [Fact]
+    public void BSplinePathVisitsSegmentsInOrder()
+    {
+        var light = LightSource.CreateDefault(1f, 0f);
+        light.UseBSpline = true;
+        var segments = light.BSplineSegments();
+        int n = segments.Length;
+        for (int k = 0; k < n; k++)
+        {
+            Near2(segments[k][0], light.Evaluate((float)k / n));
+            Near2(LightSource.DeCasteljau(segments[k], 0.5f), light.Evaluate((k + 0.5f) / n));
+        }
+        Near2(segments[0][0], light.Evaluate(0.99999f), 1e-3f);
+    }
 }

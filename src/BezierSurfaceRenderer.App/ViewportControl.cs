@@ -23,6 +23,13 @@ public sealed class ViewportControl : Control
     private static readonly Color NetColor = Color.Orange;
     private static readonly Color PathColor = Color.MediumPurple;
 
+    /// <summary>Colours of the B-spline's Bézier segments (8 points → 8 segments; reused cyclically if there are more).</summary>
+    private static readonly Color[] SegmentColors =
+    [
+        Color.Red, Color.Orange, Color.Yellow, Color.LimeGreen,
+        Color.Cyan, Color.DodgerBlue, Color.MediumPurple, Color.HotPink,
+    ];
+
     private const float FitMargin = 1.05f;
     private static readonly TimeSpan MaxStep = TimeSpan.FromSeconds(0.25);
     private const float HandleHitPixels = 9f;
@@ -233,12 +240,18 @@ public sealed class ViewportControl : Control
     {
         var light = Light!;
 
-        const int samples = 240;
-        var pts = new PointF[samples + 1];
-        for (int k = 0; k <= samples; k++) pts[k] = ToOverlay(light.Evaluate((float)k / samples));
-        using (var pen = new Pen(Color.FromArgb(EditLightPath ? 230 : 150, PathColor), EditLightPath ? 2f : 1.5f))
+        // Every Bézier segment of the path is drawn on its own: the single Bézier curve in PathColor,
+        // the B-spline's segments each in a different colour.
+        var segments = light.Segments();
+        const int samplesPerSegment = 60;
+        var pts = new PointF[samplesPerSegment + 1];
+        for (int s = 0; s < segments.Length; s++)
         {
-            if (!EditLightPath) pen.DashPattern = [4f, 3f];
+            for (int k = 0; k <= samplesPerSegment; k++)
+                pts[k] = ToOverlay(LightSource.DeCasteljau(segments[s], (float)k / samplesPerSegment));
+            Color color = light.UseBSpline ? SegmentColors[s % SegmentColors.Length] : PathColor;
+            using var pen = new Pen(Color.FromArgb(EditLightPath ? 230 : 170, color), EditLightPath || light.UseBSpline ? 2f : 1.5f);
+            if (!EditLightPath && !light.UseBSpline) pen.DashPattern = [4f, 3f];
             g.DrawLines(pen, pts);
         }
 
@@ -254,6 +267,18 @@ public sealed class ViewportControl : Control
                 float r = k == 0 ? 7 : 5;
                 g.FillRectangle(pointBrush, p.X - r, p.Y - r, 2 * r, 2 * r);
             }
+
+            // B-spline construction: the Bézier control points of each segment (edge thirds and joints).
+            if (light.UseBSpline)
+                for (int s = 0; s < segments.Length; s++)
+                {
+                    using var brush = new SolidBrush(SegmentColors[s % SegmentColors.Length]);
+                    foreach (var q in segments[s].Take(3))
+                    {
+                        var p = ToOverlay(q);
+                        g.FillEllipse(brush, p.X - 3, p.Y - 3, 6, 6);
+                    }
+                }
         }
 
         // Current light position on the curve.

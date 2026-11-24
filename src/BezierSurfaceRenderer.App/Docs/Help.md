@@ -50,7 +50,8 @@ Oba parametry są wybierane **niezależnie dla każdej powierzchni**: najpierw w
 ### Light (światło)
 - **Light z** — współrzędna z płaszczyzny, w której porusza się światło.
 - **Light color…** (także menu **Colors → Light color**) — kolor światła IL, domyślnie biały (kolor przycisku pokazuje bieżący kolor).
-- **Animate light** — światło porusza się po zamkniętej krzywej Béziera; odznaczenie pola (lub Spacja) zatrzymuje animację.
+- **Animate light** — światło porusza się po zamkniętej krzywej (Béziera lub B-sklejanej); odznaczenie pola (lub Spacja) zatrzymuje animację.
+- **B-spline path (Bézier segments)** — przełącznik rodzaju krzywej. Wyłączony: jedna krzywa Béziera stopnia 8 (jak dotychczas). Włączony: te same punkty V0 … V7 są wierzchołkami zamkniętego wieloboku B-spline, a krzywa B-sklejana trzeciego stopnia jest zbudowana geometrycznie z 8 segmentów Béziera; każdy segment jest rysowany innym kolorem, a światło przechodzi kolejno z jednego segmentu na następny. W trybie „Edit light path” widać też punkty kontrolne segmentów (kropki w kolorach segmentów).
 - **Edit light path** — pokazuje wielobok kontrolny krzywej (punkty V0 … V7; większy kwadrat to V0 = V8). Każdy punkt można przeciągnąć myszą. Żółty punkt na krzywej to aktualne położenie źródła światła.
 
 ## 5. Format pliku wejściowego
@@ -127,4 +128,5 @@ L = normalize(światło − P),  V = [0, 0, 1],  R = 2⟨N, L⟩N − L
 
   uwzględniane są **obie strony powierzchni**: wektor normalny jest zwracany w stronę obserwatora (jeżeli N_z < 0, jest zastępowany przez −N), więc spód powierzchni jest oświetlany tak samo jak wierzch. Jeżeli światło znajduje się po drugiej stronie powierzchni niż obserwator, widoczna strona nie jest oświetlona (nie ma składowej rozproszonej ani odblasku). Dopiero wynik końcowy jest mnożony przez 255 i ograniczany do 255.
 - **Światło**: punktowe źródło światła poruszające się po zamkniętej krzywej Béziera stopnia 8 (punkty kontrolne V0 … V8, V8 = V0, czyli 9 punktów, w tym 8 różnych) w płaszczyźnie z = const, w układzie obserwatora (krzywa nie obraca się razem ze sceną). Punkt krzywej dla parametru t jest wyznaczany algorytmem de Casteljau; t rośnie z prędkością 0,1 okrążenia na sekundę.
+- **Krzywa B-sklejana (konstrukcja geometryczna)**: każdy bok V(i)V(i+1) zamkniętego wieloboku jest dzielony na trzy równe części punktami A(i) (⅓) i B(i) (⅔); przy każdym wierzchołku V(i) łączymy sąsiednie punkty podziału B(i−1) i A(i) i dzielimy ten odcinek na pół — środek to S(i). Segment i jest krzywą Béziera trzeciego stopnia o punktach kontrolnych S(i), A(i), B(i), S(i+1), więc 8 wierzchołków daje 8 segmentów (indeksy modulo 8). Parametr t ∈ [0, 1) wybiera segment k = ⌊8t⌋ i parametr lokalny 8t − k, punkt segmentu jest liczony algorytmem de Casteljau.
 - **Wydajność**: poziome pasy obrazu są renderowane równolegle; każdy pas ma na wyłączność swoje wiersze bufora koloru i bufora głębokości.
