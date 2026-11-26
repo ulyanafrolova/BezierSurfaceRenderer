@@ -25,7 +25,7 @@ public sealed class HelpForm : Form
 
     public HelpForm()
     {
-        Text = "Dokumentacja — Bézier Surface Renderer";
+        Text = "Help — Bézier Surface Renderer";
         Size = new Size(900, 800);
         StartPosition = FormStartPosition.CenterParent;
         ShowInTaskbar = false;
@@ -51,7 +51,7 @@ public sealed class HelpForm : Form
     private static string LoadMarkdown()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Help.md");
-        if (stream == null) return "Nie znaleziono zasobu dokumentacji.";
+        if (stream == null) return "Documentation resource not found.";
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
