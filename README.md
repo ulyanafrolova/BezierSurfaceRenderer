@@ -5,6 +5,10 @@ them entirely in software: scan-line triangle filling with a bucket-sorted edge 
 (Lambert diffuse + specular), a depth buffer, textures and normal maps. The light travels along an editable
 closed Bézier or B-spline curve, and can be switched to three coloured (R, G, B) spotlights.
 
+<p align="center">
+  <img src="docs/images/hero.png" alt="A textured saddle and a shiny dome lit by a light moving along a dashed closed curve" width="800">
+</p>
+
 Full user manual and technical description: [src/BezierSurfaceRenderer.App/Docs/Help.md](src/BezierSurfaceRenderer.App/Docs/Help.md)
 — also available inside the application with **F1**.
 
@@ -29,6 +33,56 @@ Full user manual and technical description: [src/BezierSurfaceRenderer.App/Docs/
 - **Trackball rotation** — unlimited free rotation with a virtual sphere; dragging near the edge spins
   the scene around the viewing axis.
 - **Parallel rendering** — horizontal image bands are rendered concurrently.
+
+## Gallery
+
+All images below are produced by the project's own renderer (`BezierSurfaceRenderer.Core`) with the bundled
+surfaces, texture and normal maps; the overlays are drawn the same way as in the application's viewport.
+
+### Display layers
+
+| Bézier control nets | Triangle mesh | Filled + mesh |
+|:---:|:---:|:---:|
+| ![Orange 4×4 control nets of both surfaces](docs/images/layer-net.png) | ![Cyan triangle mesh wireframe](docs/images/layer-mesh.png) | ![Filled, lit triangles with the mesh on top](docs/images/layer-filled.png) |
+
+### Triangulation density
+
+| n = 2 (8 triangles / surface) | n = 6 (72) | n = 24 (1152) |
+|:---:|:---:|:---:|
+| ![Coarse triangulation](docs/images/triangulation-2.png) | ![Medium triangulation](docs/images/triangulation-6.png) | ![Fine triangulation](docs/images/triangulation-24.png) |
+
+### Normal maps
+
+| Normal maps off | Normal maps on (bricks on the dome, sphere on the saddle) |
+|:---:|:---:|
+| ![Smooth surfaces](docs/images/normalmap-off.png) | ![Brick relief on the dome](docs/images/normalmap-on.png) |
+
+### Material
+
+| Matte — kd = 0.9, ks = 0 | Glossy — kd = 0.4, ks = 0.8, m = 60 |
+|:---:|:---:|
+| ![Matte shading without highlights](docs/images/material-matte.png) | ![Glossy shading with a sharp highlight](docs/images/material-glossy.png) |
+
+### Light path editing
+
+| Degree-8 Bézier curve | Cubic B-spline from 8 Bézier segments |
+|:---:|:---:|
+| ![Purple control polygon V0…V7 and the Bézier curve](docs/images/path-bezier.png) | ![Same polygon, B-spline drawn as 8 coloured segments with their control points](docs/images/path-bspline.png) |
+
+The squares are the draggable points V0 … V7 (V0 is the larger one); in B-spline mode the small dots are
+the Bézier control points of each segment, built from the polygon's edge thirds and their midpoints.
+
+### Three R, G, B lights
+
+| Point lights | Spotlights aimed at the centre (p = 12) |
+|:---:|:---:|
+| ![Red, green and blue point lights](docs/images/rgb-point.png) | ![Red, green and blue spotlights with beam direction markers](docs/images/rgb-spot.png) |
+
+### Rotation
+
+| Start view | + rotation about y | + rotation about x |
+|:---:|:---:|:---:|
+| ![Start view](docs/images/rotation-0.png) | ![Rotated about the vertical axis](docs/images/rotation-1.png) | ![Rotated about the horizontal axis](docs/images/rotation-2.png) |
 
 ## Requirements
 
@@ -124,6 +178,51 @@ Malformed files produce an error message naming the offending line.
 
 ## How it works
 
+### Rendering pipeline
+
+```mermaid
+flowchart LR
+    F["surfaces.txt<br/>16 control points<br/>per surface"] --> P["SurfaceFileParser"]
+    P --> S["BezierSurface<br/>P, Pu, Pv, N"]
+    S --> T["Triangulator<br/>(n+1)×(n+1) grid"]
+    T --> R["Rotate<br/>P' = R·P, N' = R·N"]
+    R --> J["Orthographic<br/>projection"]
+    J --> E["ET / AET<br/>scan-line fill"]
+    E --> B["Barycentric<br/>interpolation"]
+    B --> Z{"Z-buffer<br/>closer?"}
+    Z -- yes --> NM["Normal map<br/>N = M·N_tex"]
+    NM --> L["Lighting<br/>Σ kd + ks terms"]
+    L --> FB["FrameBuffer"]
+    Z -- no --> X(["skip pixel"])
+```
+
+### One frame in the application
+
+```mermaid
+sequenceDiagram
+    participant T as Timer (15 ms)
+    participant V as ViewportControl
+    participant L as LightSource
+    participant SR as SceneRenderer
+    participant FB as FrameBuffer
+    T->>V: Invalidate()
+    V->>L: Advance(dt)
+    V->>SR: RenderFilled(frame, meshes, settings)
+    par each 32-row band
+        SR->>FB: fill + shade + depth test
+    end
+    V->>V: copy buffer into Bitmap
+    V->>V: draw mesh, control nets, light path, lights
+```
+
+### Mouse rotation (virtual sphere)
+
+<p align="center">
+  <img src="docs/images/trackball.svg" alt="Cursor positions projected onto a virtual sphere; the rotation axis is s0 × s1" width="760">
+</p>
+
+### Step by step
+
 1. **Evaluation** — P(u, v) = Σ Σ V(i,j)·B(i,3)(u)·B(j,3)(v) with Bernstein polynomials; Pu, Pv from
    degree-2 Bernstein forms; N = normalize(Pu × Pv).
 2. **Triangulation** — a regular (n+1)×(n+1) grid in (u, v), two triangles per cell.
@@ -146,6 +245,29 @@ See [Help.md](src/BezierSurfaceRenderer.App/Docs/Help.md) for the full derivatio
 and the geometric B-spline construction.
 
 ## Project structure
+
+```mermaid
+flowchart TB
+    subgraph App["BezierSurfaceRenderer.App — WinForms, net8.0-windows"]
+        Program --> MainForm
+        MainForm --> ViewportControl
+        MainForm --> HelpForm
+        ViewportControl --> BitmapInterop
+    end
+    subgraph Core["BezierSurfaceRenderer.Core — no UI, net8.0"]
+        Scene --> Mesh --> BezierSurface
+        Scene --> Mat3
+        Arcball --> Mat3
+        SceneRenderer --> EdgeTableFiller
+        SceneRenderer --> FrameBuffer
+        SceneRenderer --> Lighting
+        SceneRenderer --> Texture
+        LightSource --> Lighting
+        SurfaceFileParser --> BezierSurface
+    end
+    Tests["BezierSurfaceRenderer.Core.Tests — xUnit"] --> Core
+    App --> Core
+```
 
 ```
 BezierSurfaceRenderer.sln
@@ -173,6 +295,7 @@ src/
     Assets/                        surfaces.txt, default texture, normal maps
 tests/
   BezierSurfaceRenderer.Core.Tests/  xUnit tests for the core library
+docs/images/                       README images and diagrams
 ```
 
 ## Dependencies
