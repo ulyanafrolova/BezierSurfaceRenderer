@@ -1,5 +1,13 @@
 # Bézier Surface Renderer
 
+![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp&logoColor=white)
+![Windows Forms](https://img.shields.io/badge/UI-Windows%20Forms-0078D4?logo=windows&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Windows-0078D4)
+![Tests](https://img.shields.io/badge/tests-xUnit-5E2750)
+![Rendering](https://img.shields.io/badge/rendering-software%20rasterizer-orange)
+![No GPU](https://img.shields.io/badge/GPU-not%20required-success)
+
 A Windows Forms application that triangulates bicubic Bézier surfaces loaded from a text file and renders
 them entirely in software: scan-line triangle filling with a bucket-sorted edge table, per-pixel lighting
 (Lambert diffuse + specular), a depth buffer, textures and normal maps. The light travels along an editable
