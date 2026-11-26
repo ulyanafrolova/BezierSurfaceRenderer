@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e8590c"/>
+    </marker>
+    <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1c7ed6"/>
+    </marker>
+    <radialGradient id="glass" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cfe3f7"/>
+    </radialGradient>
+  </defs>
+  <rect width="760" height="340" rx="12" fill="#ffffff"/>
+
+  <!-- Left: viewport seen from the front -->
+  <text x="190" y="30" text-anchor="middle" font-weight="600" fill="#212529">Viewport (front view)</text>
+  <rect x="30" y="45" width="320" height="270" rx="6" fill="#f1f3f5" stroke="#adb5bd"/>
+  <circle cx="190" cy="185" r="105" fill="url(#glass)" stroke="#1c7ed6" stroke-width="2"/>
+  <text x="190" y="68" text-anchor="middle" fill="#1c7ed6">virtual sphere, r = ½·min(w, h)</text>
+  <circle cx="190" cy="185" r="3" fill="#212529"/>
+  <line x1="190" y1="185" x2="295" y2="185" stroke="#868e96" stroke-dasharray="4 3"/>
+  <text x="245" y="203" text-anchor="middle" fill="#868e96">r</text>
+  <!-- inner drag -->
+  <circle cx="160" cy="200" r="5" fill="#e8590c"/>
+  <circle cx="225" cy="160" r="5" fill="#e8590c"/>
+  <line x1="165" y1="197" x2="218" y2="164" stroke="#e8590c" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="140" y="222" fill="#e8590c">p₀</text>
+  <text x="232" y="152" fill="#e8590c">p₁</text>
+  <text x="190" y="262" text-anchor="middle" fill="#495057">inside: free 3D rotation</text>
+  <!-- rim drag -->
+  <path d="M 310 130 A 125 125 0 0 1 310 240" fill="none" stroke="#1c7ed6" stroke-width="2.5" marker-end="url(#arrB)"/>
+  <text x="340" y="306" text-anchor="end" fill="#1c7ed6">outside: spin about z</text>
+
+  <!-- Right: side view of the sphere -->
+  <text x="565" y="30" text-anchor="middle" font-weight="600" fill="#212529">Projection onto the sphere (side view)</text>
+  <line x1="400" y1="240" x2="740" y2="240" stroke="#868e96"/>
+  <text x="735" y="258" text-anchor="end" fill="#868e96">screen plane (x, y)</text>
+  <line x1="565" y1="240" x2="565" y2="70" stroke="#868e96" marker-end="url(#arrB)"/>
+  <text x="575" y="80" fill="#868e96">z (towards viewer)</text>
+  <path d="M 445 240 A 120 120 0 0 1 685 240" fill="#e7f1fb" stroke="#1c7ed6" stroke-width="2"/>
+  <!-- s0, s1 -->
+  <line x1="530" y1="240" x2="530" y2="125" stroke="#e8590c" stroke-dasharray="4 3"/>
+  <line x1="610" y1="240" x2="610" y2="131" stroke="#e8590c" stroke-dasharray="4 3"/>
+  <circle cx="530" cy="240" r="4" fill="#e8590c"/><text x="522" y="258" fill="#e8590c">q₀</text>
+  <circle cx="610" cy="240" r="4" fill="#e8590c"/><text x="602" y="258" fill="#e8590c">q₁</text>
+  <circle cx="530" cy="125" r="5" fill="#e8590c"/><text x="500" y="118" fill="#e8590c">s₀</text>
+  <circle cx="610" cy="131" r="5" fill="#e8590c"/><text x="618" y="124" fill="#e8590c">s₁</text>
+  <line x1="565" y1="240" x2="530" y2="125" stroke="#495057" stroke-width="1.5"/>
+  <line x1="565" y1="240" x2="610" y2="131" stroke="#495057" stroke-width="1.5"/>
+  <path d="M 553 200 A 42 42 0 0 1 581 202" fill="none" stroke="#212529" stroke-width="1.5"/>
+  <text x="567" y="192" text-anchor="middle" fill="#212529">θ</text>
+  <text x="565" y="290" text-anchor="middle" fill="#212529">s = (qx, qy, √(1 − |q|²)),  q = p / r</text>
+  <text x="565" y="315" text-anchor="middle" fill="#212529">axis = s₀ × s₁,  θ = acos(s₀ · s₁),  R ← R_inc · R</text>
+</svg>
